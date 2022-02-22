@@ -60,8 +60,8 @@ type NativeCfg = Record<
   Array<
     | NativeSymbol
     | {
-        name: NativeSymbol
-        polish: ReplaceReturn<NativeLogger, Partial<NativeInvocation>>
+        symbol: NativeSymbol
+        logger: ReplaceReturn<NativeLogger, Partial<NativeInvocation>>
       }
   >
 >
@@ -75,8 +75,8 @@ type RuntimeCfg = Record<
   Array<
     | Selector
     | {
-        name: Selector
-        polish: ReplaceReturn<RuntimeLogger, Partial<RuntimeInvocation>>
+        symbol: Selector
+        logger: ReplaceReturn<RuntimeLogger, Partial<RuntimeInvocation>>
       }
   >
 >

@@ -18,6 +18,11 @@ function swizzle(method: any, impl: (original, args) => any) {
   return method.implementation
 }
 
+/**
+ * construct an @autoreleasepool for fn, every autorelease NSObject marked inside fn will receive an `release` message after exit this scope
+ * thus toi avoid memory leak for autorelease object
+ * @param fn
+ */
 const autoreleasepool = (fn: () => void) => {
   const pool = NSAutoreleasePool.alloc().init()
   try {
@@ -27,7 +32,7 @@ const autoreleasepool = (fn: () => void) => {
   }
 }
 
-const dump: RuntimeLogger = (
+const trace: RuntimeLogger = (
   ret: any,
   self: any,
   cmd: any,
@@ -53,12 +58,12 @@ rpc.exports = {
     const normalized = mapValues(RuntimeSensitives, (ary) =>
       ary.map((it) => {
         if (isString(it)) {
-          return { name: it, call: dump }
+          return { symbol: it, logger: trace }
         } else {
           return {
-            name: it.name,
-            call: (...args: Parameters<RuntimeLogger>) => {
-              return { ...dump(...args), ...it.polish(...args) }
+            symbol: it.symbol,
+            logger(...args: Parameters<RuntimeLogger>) {
+              return { ...trace(...args), ...it.logger(...args) }
             },
           }
         }
@@ -71,14 +76,14 @@ rpc.exports = {
         console.log(`missing class: ${key}`)
       } else {
         values.forEach((value) => {
-          if (!clazz[value.name]) {
+          if (!clazz[value.symbol]) {
             console.log(`missing ${key}:${value}`)
           } else {
-            swizzle(clazz[value.name], (origin, [self, cmd, ...args]) => {
+            swizzle(clazz[value.symbol], (origin, [self, cmd, ...args]) => {
               const returns = origin(self, cmd, ...args)
               autoreleasepool(() => {
                 const serialized = JSON.stringify(
-                  value.call(returns, self, cmd, ...args)
+                  value.logger(returns, self, cmd, ...args)
                 )
                 const data = NSString['stringWithString:'](serialized)
                 DispatchedReporter['report:'](data)
