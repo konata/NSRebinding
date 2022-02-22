@@ -23,15 +23,15 @@ type ClassMethod = `+ ${string}`
 /**
  * oc method signature
  */
-type Signature = InstanceMethod | ClassMethod
+type Selector = InstanceMethod | ClassMethod
 
 /**
  * log output type for each call
  */
-type RuntimeRecorder = {
+type RuntimeInvocation = {
   signature: string
   receiver: string
-  cmd: string
+  selector: string
   args: Array<string>
   returns: string
   description?: string
@@ -40,28 +40,28 @@ type RuntimeRecorder = {
 /**
  * callback method type
  */
-type RuntimeRecorderType = (
+export type RuntimeLogger = (
   returns: any,
   receiver: any,
   cmd: any,
   ...params: any[]
-) => RuntimeRecorder
+) => RuntimeInvocation
 
 /**
  * native symbol signature
  */
-type NativeModuleType = string
+type ModuleName = string
 type NativeSymbol = string
-type NativeRecorder = Omit<RuntimeRecorder, 'receiver' | 'cmd'>
-type NativeRecorderType = (returns: any, ...params: any[]) => NativeRecorder
+type NativeInvocation = Omit<RuntimeInvocation, 'receiver' | 'cmd'>
+type NativeLogger = (returns: any, ...params: any[]) => NativeInvocation
 
 type NativeCfg = Record<
-  NativeModuleType,
+  ModuleName,
   Array<
     | NativeSymbol
     | {
         name: NativeSymbol
-        polish: ReplaceReturn<NativeRecorderType, Partial<NativeRecorder>>
+        polish: ReplaceReturn<NativeLogger, Partial<NativeInvocation>>
       }
   >
 >
@@ -73,10 +73,10 @@ type NativeCfg = Record<
 type RuntimeCfg = Record<
   Class | Protocol | Abstract | Hidden,
   Array<
-    | Signature
+    | Selector
     | {
-        name: Signature
-        polish: ReplaceReturn<RuntimeRecorderType, Partial<RuntimeRecorder>>
+        name: Selector
+        polish: ReplaceReturn<RuntimeLogger, Partial<RuntimeInvocation>>
       }
   >
 >
@@ -216,7 +216,7 @@ export const RuntimeSensitives: RuntimeCfg = {
   HMHomeManager: ['+ new', '- registerHandler:handler:'],
 }
 
-const NativeSensitives: NativeCfg = {
+export const NativeSensitives: NativeCfg = {
   SystemConfiguration: [
     'CNCopySupportedInterfaces',
     'CNCopyCurrentNetworkInfo',
