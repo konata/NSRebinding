@@ -1,22 +1,49 @@
-import { log } from "./logger";
+import { RuntimeSensitives } from './signatures'
 
-const header = Memory.alloc(16);
-header
-    .writeU32(0xdeadbeef).add(4)
-    .writeU32(0xd00ff00d).add(4)
-    .writeU64(uint64("0x1122334455667788"));
-log(hexdump(header.readByteArray(16) as ArrayBuffer, { ansi: true }));
+const Oc = ObjC
+const { UILabel, DispatchedReporter, NSString } = Oc.classes
 
-Process.getModuleByName("libSystem.B.dylib")
-    .enumerateExports()
-    .slice(0, 16)
-    .forEach((exp, index) => {
-        log(`export ${index}: ${exp.name}`);
-    });
+function swizzle(method: any, impl: (original, args) => any) {
+  const src = method.implementation
+  method.implementation = Oc.implement(method, (...args) => {
+    return impl(src, args)
+  })
+  return method.implementation
+}
 
-Interceptor.attach(Module.getExportByName(null, "open"), {
-    onEnter(args) {
-        const path = args[0].readUtf8String();
-        log(`open() path="${path}"`);
-    }
-});
+rpc.exports = {
+  init() {
+    Object.entries(RuntimeSensitives).forEach(([key, values]) => {
+      const clazz = Oc.classes[key]
+      if (!clazz) {
+        console.log(`missing class: ${key}`)
+      } else {
+        // console.log(`found class: ${key}`)
+        values.forEach((value) => {
+          if (!clazz[value]) {
+            console.log(`missing ${key}:${value}`)
+          } else {
+            // console.log(`got: ${key}/${value}`)
+          }
+        })
+      }
+    })
+
+    /*
+    swizzle(UILabel['- setText:'], (original, [self, cmd, ...params]) => {
+      const type = new Oc.Object(self)['$class'].toString()
+      const selector = Oc.selectorAsString(cmd)
+      const args = params.map((it) => {
+        const description = new Oc.Object(it).toString()
+        console.log(`description: ${description}`)
+        return description
+      })
+      const json = JSON.stringify({ type, selector, args })
+      const data = NSString['stringWithString:'](json)
+      DispatchedReporter['report:'](data)
+      return original(self, cmd, ...params)
+    })
+    */
+  },
+  dispose() {},
+}
