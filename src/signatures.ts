@@ -43,7 +43,7 @@ type RuntimeInvocation = {
 export type RuntimeLogger = (
   returns: any,
   receiver: any,
-  cmd: any,
+  cmd: string,
   ...params: any[]
 ) => RuntimeInvocation
 

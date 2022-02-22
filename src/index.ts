@@ -2,7 +2,7 @@ import { isString, mapValues } from 'lodash'
 import { RuntimeLogger, RuntimeSensitives } from './signatures'
 
 const Oc = ObjC
-const { UILabel, DispatchedReporter, NSString, NSAutoreleasePool } = Oc.classes
+const { DispatchedReporter, NSString, NSAutoreleasePool } = Oc.classes
 
 /**
  * method swizzling for both oc-runtime method and native method
@@ -32,6 +32,7 @@ const autoreleasepool = (fn: () => void) => {
   }
 }
 
+// TODO
 const trace: RuntimeLogger = (
   ret: any,
   self: any,
@@ -83,7 +84,7 @@ rpc.exports = {
               const returns = origin(self, cmd, ...args)
               autoreleasepool(() => {
                 const serialized = JSON.stringify(
-                  value.logger(returns, self, cmd, ...args)
+                  value.logger(returns, self, Oc.selectorAsString(cmd), ...args)
                 )
                 const data = NSString['stringWithString:'](serialized)
                 DispatchedReporter['report:'](data)
@@ -94,6 +95,8 @@ rpc.exports = {
         })
       }
     })
+
+    // TODO native hooks
 
     /*
     swizzle(UILabel['- setText:'], (original, [self, cmd, ...params]) => {
