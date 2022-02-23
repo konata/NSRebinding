@@ -1,8 +1,11 @@
-import { isString, mapValues } from 'lodash'
+import { filter, isString, mapValues, omit, omitBy, pick, pickBy } from 'lodash'
 import { RuntimeLogger, RuntimeSensitives } from './signatures'
 
 const Oc = ObjC
 const { DispatchedReporter, NSString, NSAutoreleasePool } = Oc.classes
+
+const Hook = 'Hook'
+const Summary = 'Summary'
 
 /**
  * method swizzling for both oc-runtime method and native method
@@ -10,17 +13,27 @@ const { DispatchedReporter, NSString, NSAutoreleasePool } = Oc.classes
  * @param impl replacer
  * @returns
  */
-function swizzle(method: any, impl: (original, args) => any) {
-  const src = method.implementation
-  method.implementation = Oc.implement(method, (...args) => {
-    return impl(src, args)
+function swizzle(
+  clazz: string,
+  method: string,
+  impl: (
+    original: (...arg: any[]) => any,
+    clazz: string,
+    method: string,
+    args: Array<any>
+  ) => any
+) {
+  const fn = Oc.classes[clazz][method]
+  const original = fn.implementation
+  fn.implementation = Oc.implement(fn, (...args) => {
+    return impl(original, clazz, method, args)
   })
-  return method.implementation
+  return fn.implementation
 }
 
 /**
- * construct an @autoreleasepool for fn, every autorelease NSObject marked inside fn will receive an `release` message after exit this scope
- * thus toi avoid memory leak for autorelease object
+ * construct an @autoreleasepool for scope `fn`, every autorelease NSObject marked inside `fn` will receive a `release` message while scope exit
+ * thus to avoid memory leak for autorelease object
  * @param fn
  */
 const autoreleasepool = (fn: () => void) => {
@@ -32,25 +45,33 @@ const autoreleasepool = (fn: () => void) => {
   }
 }
 
-// TODO
 const trace: RuntimeLogger = (
-  ret: any,
-  self: any,
-  cmd: any,
-  ...params: any[]
+  clazz: string,
+  method: string,
+  returns: any,
+  receiver: any,
+  selector: string,
+  ...args: any[]
 ) => {
-  const signature = ''
-  const receiver = ''
-  const selector = ''
-  const args = []
-  const returns = ''
-
-  return {
+  const signature = `[${clazz} ${method}]`
+  const data = {
     signature,
     receiver,
     selector,
     args,
     returns,
+  }
+  return data
+}
+
+const repr = (who: any) => {
+  if (
+    !(who instanceof NativePointer) &&
+    !(typeof who === 'object' && who.hasOwnProperty('handle'))
+  ) {
+    return `${who}`
+  } else {
+    return `${new Oc.Object(who)}`
   }
 }
 
@@ -71,32 +92,56 @@ rpc.exports = {
       })
     )
 
-    Object.entries(normalized).forEach(([key, values]) => {
+    const missed = Object.entries(normalized).map(([key, values]) => {
       const clazz = Oc.classes[key]
       if (!clazz) {
-        console.log(`missing class: ${key}`)
+        console.error(`missing class: ${key}`)
+        return { [key]: '*' }
       } else {
-        values.forEach((value) => {
-          if (!clazz[value.symbol]) {
-            console.log(`missing ${key}:${value}`)
+        const missed = values.map((value) => {
+          // filter out all non-own methods, coz it may hook other sub classes
+          if (!clazz.$ownMethods.includes(value.symbol)) {
+            console.error(`missing ${key}:${JSON.stringify(value)}`)
+            return value.symbol
           } else {
-            swizzle(clazz[value.symbol], (origin, [self, cmd, ...args]) => {
-              const returns = origin(self, cmd, ...args)
-              autoreleasepool(() => {
-                const serialized = JSON.stringify(
-                  value.logger(returns, self, Oc.selectorAsString(cmd), ...args)
-                )
-                const data = NSString['stringWithString:'](serialized)
-                DispatchedReporter['report:'](data)
-              })
-              return returns
-            })
+            const fun = Oc.classes[key][value.symbol]
+            swizzle(
+              key,
+              value.symbol,
+              (origin, clazz, method, [self, cmd, ...args]) => {
+                const returns = origin(self, cmd, ...args)
+                autoreleasepool(() => {
+                  const serialized = JSON.stringify(
+                    value.logger(
+                      clazz,
+                      method,
+                      repr(returns),
+                      repr(self), // null
+                      Oc.selectorAsString(cmd),
+                      ...args.map((it) => repr(it)) // args maybe BOOL, which can not wrapped into Oc instance
+                    )
+                  )
+                  const hook = NSString['stringWithString:'](Hook)
+                  const data = NSString['stringWithString:'](serialized)
+                  DispatchedReporter['report:for:'](data, hook)
+                })
+                return returns
+              }
+            )
+            return ''
           }
         })
+        return { [key]: missed.filter((it) => !it) }
       }
     })
 
-    // TODO native hooks
+    const picked = pickBy(missed, (it) => it.length)
+    const serialized = JSON.stringify(picked)
+    autoreleasepool(() => {
+      const summary = NSString['stringWithString:'](Summary)
+      const data = NSString['stringWithString:'](serialized)
+      DispatchedReporter['report:for:'](data, summary)
+    })
 
     /*
     swizzle(UILabel['- setText:'], (original, [self, cmd, ...params]) => {

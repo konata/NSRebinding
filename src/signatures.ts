@@ -29,11 +29,11 @@ type Selector = InstanceMethod | ClassMethod
  * log output type for each call
  */
 type RuntimeInvocation = {
-  signature: string
-  receiver: string
-  selector: string
-  args: Array<string>
-  returns: string
+  signature: string // +-[Class method]
+  receiver: string // receiver
+  selector: string // method name
+  args: Array<string> // args
+  returns: string // string
   description?: string
 }
 
@@ -41,6 +41,8 @@ type RuntimeInvocation = {
  * callback method type
  */
 export type RuntimeLogger = (
+  clazz: string,
+  method: string,
   returns: any,
   receiver: any,
   cmd: string,

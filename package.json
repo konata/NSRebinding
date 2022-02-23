@@ -7,7 +7,8 @@
   "scripts": {
     "prepare": "npm run build",
     "build": "frida-compile src/index.ts -o index.js -c",
-    "watch": "frida-compile src/index.ts -o index.js -w"
+    "watch": "frida-compile src/index.ts -o index.js -w",
+    "play": "frida-compile src/playground.ts -o index.js -w" 
   },
   "devDependencies": {
     "@types/frida-gum": "^17.1.0",
