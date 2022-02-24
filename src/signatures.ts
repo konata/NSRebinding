@@ -1,3 +1,5 @@
+import internal from 'stream'
+
 /**
  * utility type
  */
@@ -29,6 +31,7 @@ type Selector = InstanceMethod | ClassMethod
  * log output type for each call
  */
 type RuntimeInvocation = {
+  detail: Record<string, string>
   signature: string // +-[Class method]
   receiver: string // receiver
   selector: string // method name
@@ -41,6 +44,7 @@ type RuntimeInvocation = {
  * callback method type
  */
 export type RuntimeLogger = (
+  detail: Record<string, string>,
   clazz: string,
   method: string,
   returns: any,
@@ -115,6 +119,7 @@ export const RuntimeSensitives: RuntimeCfg = {
     '- stopUpdatingLocation',
     '- requestLocation',
   ],
+
   ATTrackingManager: ['+ requestTrackingAuthorizationWithCompletionHandler:'],
   ASIdentifierManager: ['+ sharedManager', '- advertisingIdentifier'],
   CBCentralManager: ['- initWithDelegate:queue:options:'],
@@ -159,6 +164,7 @@ export const RuntimeSensitives: RuntimeCfg = {
   ],
 
   WKHTTPCookieStore: ['- setCookie:completionHandler:'],
+
   NSURL: ['+ URLWithString:'],
   NSURLRequest: ['- initWithURL:'],
   NSURLSession: [
@@ -166,11 +172,14 @@ export const RuntimeSensitives: RuntimeCfg = {
     '- dataTaskWithRequest:completionHandler:',
     '- dataTaskWithRequest:',
   ],
+
   NSURLSessionDataTask: ['- resume'],
+
   NSURLConnection: [
     '+ sendSynchronousRequest:returningResponse:error:',
     '+ sendAsynchronousRequest:queue:completionHandler:',
   ],
+
   NSMutableURLRequest: [
     '- setURL:',
     '- setHTTPMethod:',
@@ -178,11 +187,13 @@ export const RuntimeSensitives: RuntimeCfg = {
     '- addValue:forHTTPHeaderField:',
     '- setHTTPBody:',
   ],
+
   [protocol`UIApplicationDelegate`]: [
     '- application:handleOpenURL:',
     '- application:openURL:sourceApplication:annotation:',
     '- application:openURL:options:',
   ],
+
   UIApplication: [
     '- canOpenURL:',
     '- openURL:',
@@ -216,21 +227,4 @@ export const RuntimeSensitives: RuntimeCfg = {
     '- invalidateSession',
   ],
   HMHomeManager: ['+ new', '- registerHandler:handler:'],
-}
-
-export const NativeSensitives: NativeCfg = {
-  SystemConfiguration: [
-    'CNCopySupportedInterfaces',
-    'CNCopyCurrentNetworkInfo',
-  ],
-  [defaults``]: [
-    'UIApplicationMain',
-    'socket',
-    'connect',
-    'uname',
-    'CFStreamCreatePairWithSocketToHost',
-    'CCCrypt',
-    'SecKeyEncrypt',
-    'SecKeyDecrypt',
-  ],
 }

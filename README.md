@@ -30,3 +30,4 @@ $ npm run play
 ## TODO
 
 1. solve QQMusic call `[NSData dataWithContentsOfURL]` ANR error
+2. tree-shaking for builds

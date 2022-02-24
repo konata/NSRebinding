@@ -1,4 +1,8 @@
-import { filter, isString, mapValues, omit, omitBy, pick, pickBy } from 'lodash'
+import filter from 'lodash/filter'
+import isString from 'lodash/isString'
+import mapValues from 'lodash/mapValues'
+import pickBy from 'lodash/pickBy'
+
 import { RuntimeLogger, RuntimeSensitives } from './signatures'
 
 const Oc = ObjC
@@ -46,6 +50,7 @@ const autoreleasepool = (fn: () => void) => {
 }
 
 const trace: RuntimeLogger = (
+  detail: Record<string, string>,
   clazz: string,
   method: string,
   returns: any,
@@ -55,6 +60,7 @@ const trace: RuntimeLogger = (
 ) => {
   const signature = `[${clazz} ${method}]`
   const data = {
+    detail,
     signature,
     receiver,
     selector,
@@ -64,14 +70,14 @@ const trace: RuntimeLogger = (
   return data
 }
 
-const repr = (who: any) => {
+const $ = (raw: any) => {
   if (
-    !(who instanceof NativePointer) &&
-    !(typeof who === 'object' && who.hasOwnProperty('handle'))
+    !(raw instanceof NativePointer) &&
+    !(typeof raw === 'object' && raw.hasOwnProperty('handle'))
   ) {
-    return `${who}`
+    return raw
   } else {
-    return `${new Oc.Object(who)}`
+    return new Oc.Object(raw)
   }
 }
 
@@ -109,16 +115,32 @@ rpc.exports = {
               key,
               value.symbol,
               (origin, clazz, method, [self, cmd, ...args]) => {
+                const before = NSString['stringWithString:'](
+                  `before: ${method}`
+                )
+                DispatchedReporter['report:for:'](Summary, before)
                 const returns = origin(self, cmd, ...args)
+                const after = NSString['stringWithString:'](`after: ${method}`)
+                DispatchedReporter['report:for:'](Summary, after)
                 autoreleasepool(() => {
+                  const currentThread = Oc.classes['NSThread'].currentThread()
+                  const threadName = currentThread.name().toString()
+                  const main = currentThread.isMainThread()
+
                   const serialized = JSON.stringify(
                     value.logger(
+                      {
+                        main,
+                        threadName,
+                        pid: Process.id.toString(),
+                        tid: Process.getCurrentThreadId().toString(),
+                      },
                       clazz,
                       method,
-                      repr(returns),
-                      repr(self), // null
+                      $(returns).toString(),
+                      $(self).toString(), // null
                       Oc.selectorAsString(cmd),
-                      ...args.map((it) => repr(it)) // args maybe BOOL, which can not wrapped into Oc instance
+                      ...args.map((it) => $(it).toString()) // args maybe BOOL, which can not wrapped into Oc instance
                     )
                   )
                   const hook = NSString['stringWithString:'](Hook)
@@ -142,22 +164,6 @@ rpc.exports = {
       const data = NSString['stringWithString:'](serialized)
       DispatchedReporter['report:for:'](data, summary)
     })
-
-    /*
-    swizzle(UILabel['- setText:'], (original, [self, cmd, ...params]) => {
-      const type = new Oc.Object(self)['$class'].toString()
-      const selector = Oc.selectorAsString(cmd)
-      const args = params.map((it) => {
-        const description = new Oc.Object(it).toString()
-        console.log(`description: ${description}`)
-        return description
-      })
-      const json = JSON.stringify({ type, selector, args })
-      const data = NSString['stringWithString:'](json)
-      DispatchedReporter['report:'](data)
-      return original(self, cmd, ...params)
-    })
-    */
   },
   dispose() {},
 }
