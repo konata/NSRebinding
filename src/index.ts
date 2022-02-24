@@ -1,8 +1,8 @@
 import isString from 'lodash/isString'
 import mapValues from 'lodash/mapValues'
 import pickBy from 'lodash/pickBy'
-
-import { RuntimeLogger, RuntimeSensitives } from './signatures'
+import isArray from 'lodash/isArray'
+import { configuration, RuntimeRecorder, RuntimeSnapshot } from './oc'
 
 const Hook = 'Hook'
 const Summary = 'Summary'
@@ -47,7 +47,8 @@ const autoreleasepool = (fn: () => void) => {
   }
 }
 
-const trace: RuntimeLogger = (
+const logSpec = (
+  labels: string[],
   detail: Record<string, string>,
   clazz: string,
   method: string,
@@ -55,15 +56,25 @@ const trace: RuntimeLogger = (
   receiver: any,
   selector: string,
   ...args: any[]
-) => {
+): Partial<RuntimeRecorder> => {
+  // TODO
+  return '' as any
+}
+
+const logCall = (
+  detail: Record<string, string>,
+  clazz: string,
+  method: string,
+  returns: any,
+  receiver: any,
+  selector: string,
+  ...args: any[]
+): Partial<RuntimeRecorder> => {
   const signature = `[${clazz} ${method}]`
   const data = {
     detail,
     signature,
-    receiver,
     selector,
-    args,
-    returns,
   }
   return data
 }
@@ -81,16 +92,30 @@ const $ = (raw: any) => {
 
 rpc.exports = {
   init() {
-    const normalized = mapValues(RuntimeSensitives, (ary) =>
+    const normalized = mapValues(configuration, (ary) =>
       ary.map((it) => {
         if (isString(it)) {
-          return { symbol: it, logger: trace }
+          return { symbol: it, logger: logCall }
         } else {
-          return {
-            symbol: it.symbol,
-            logger(...args: Parameters<RuntimeLogger>) {
-              return { ...trace(...args), ...it.logger(...args) }
-            },
+          if (Array.isArray(it.logger)) {
+            const { symbol, logger: labels } = it
+            return {
+              symbol,
+              logger(...args: Parameters<RuntimeRecorder>) {
+                return {
+                  ...logCall(...args),
+                  ...logSpec(labels, ...args),
+                }
+              },
+            }
+          } else {
+            const { symbol, logger } = it
+            return {
+              symbol,
+              logger(...args: Parameters<RuntimeRecorder>) {
+                return { ...logCall(...args), ...logger(...args) }
+              },
+            }
           }
         }
       })
