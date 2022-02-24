@@ -57,17 +57,17 @@ const logSpec = (
   ...args: any[]
 ): Partial<RuntimeRecorder> => {
   // TODO
-  return '' as any
+  return {}
 }
 
 const logCall = (
   detail: Record<string, string>,
   clazz: string,
   method: string,
-  returns: any,
-  receiver: any,
+  _returns: any,
+  _receiver: any,
   selector: string,
-  ...args: any[]
+  ..._args: any[]
 ): Partial<RuntimeRecorder> => {
   const signature = `[${clazz} ${method}]`
   const data = {
@@ -148,7 +148,6 @@ rpc.exports = {
                   const currentThread = Oc.classes['NSThread'].currentThread()
                   const threadName = currentThread.name().toString()
                   const main = currentThread.isMainThread()
-
                   const serialized = JSON.stringify(
                     value.logger(
                       {
@@ -159,10 +158,12 @@ rpc.exports = {
                       },
                       clazz,
                       method,
-                      $(returns).toString(),
-                      $(self).toString(), // null
+                      $(returns),
+                      $(self),
                       Oc.selectorAsString(cmd),
-                      ...args.map((it) => $(it).toString()) // args maybe BOOL, which can not wrapped into Oc instance
+                      ...args.map(
+                        (it) => $(it) // args maybe BOOL, which can not wrapped into Oc instance
+                      )
                     )
                   )
                   const hook = NSString['stringWithString:'](Hook)
