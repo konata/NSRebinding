@@ -1,7 +1,6 @@
 import isString from 'lodash/isString'
 import mapValues from 'lodash/mapValues'
 import pickBy from 'lodash/pickBy'
-import isArray from 'lodash/isArray'
 import { configuration, RuntimeRecorder, RuntimeSnapshot } from './oc'
 
 const Hook = 'Hook'
