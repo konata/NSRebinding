@@ -22,14 +22,14 @@ const src = fn.implementation
 fn.implementation = Oc.implement(fn, (self, cmd, ...args) => {
   const bar = src(self, cmd, ...args)
   console.log(
-    `self-className: ${of(self).$className}, cmd:${Oc.selectorAsString(cmd)} args:${args.map((it) =>
-      of(it)
-    )} ret:${bar}`
+    `self-className: ${of(self).$className}, cmd:${Oc.selectorAsString(
+      cmd
+    )} args:${args.map((it) => of(it))} ret:${bar}`
   )
   return bar
 })
 
-console.log(`Gogogo`)
+console.log(`playground initialized`)
 
 // try {
 //   console.log(

@@ -1,15 +1,13 @@
-import filter from 'lodash/filter'
 import isString from 'lodash/isString'
 import mapValues from 'lodash/mapValues'
 import pickBy from 'lodash/pickBy'
 
 import { RuntimeLogger, RuntimeSensitives } from './signatures'
 
-const Oc = ObjC
-const { DispatchedReporter, NSString, NSAutoreleasePool } = Oc.classes
-
 const Hook = 'Hook'
 const Summary = 'Summary'
+const Oc = ObjC
+const { DispatchedReporter, NSString, NSAutoreleasePool } = Oc.classes
 
 /**
  * method swizzling for both oc-runtime method and native method
