@@ -1,12 +1,11 @@
-import isString from 'lodash/isString'
 import mapValues from 'lodash/mapValues'
 import pickBy from 'lodash/pickBy'
-import { configuration, RuntimeRecorder, RuntimeSnapshot } from './oc'
+import { configuration, RuntimeRecorder } from './oc'
 
 const Hook = 'Hook'
 const Summary = 'Summary'
 const Oc = ObjC
-const { DispatchedReporter, NSString, NSAutoreleasePool } = Oc.classes
+const { DispatchedReporter, NSString, NSAutoreleasePool, NSThread } = Oc.classes
 
 /**
  * method swizzling for both oc-runtime method and native method
@@ -46,22 +45,74 @@ const autoreleasepool = (fn: () => void) => {
   }
 }
 
-const logSpec = (
+/**
+ * log designated parts of the calling frame,
+ *
+ * @param labels user defined param keys to log
+ * @param _env extra environment for calling stack,
+ * @param _clazz  frame class
+ * @param _method  frame method
+ * @param returns  frame return value
+ * @param receiver frame receiver
+ * @param _selector frame selector from calling context
+ * @param args frame arguments
+ * @returns the log object
+ */
+const designated = (
   labels: string[],
-  detail: Record<string, string>,
-  clazz: string,
-  method: string,
+  _env: Record<string, string>,
+  _clazz: string,
+  _method: string,
   returns: any,
   receiver: any,
-  selector: string,
+  _selector: string,
   ...args: any[]
 ): Partial<RuntimeRecorder> => {
-  // TODO
-  return {}
+  const uniques = new Set(...labels)
+  if (uniques.delete('*')) {
+    return {
+      returns,
+      receiver,
+      args,
+    }
+  } else {
+    const messy = Object.create({})
+    if (uniques.delete('returns')) {
+      Object.assign(messy, { returns })
+    }
+    if (uniques.delete('self')) {
+      Object.assign(messy, { receiver })
+    }
+
+    // mapping arguments
+    const declared = _method.replace(/^[-+]\s*/g, '').split(':')
+    // remove the last empty group or the only leading group
+    declared.pop()
+    const positions = labels
+      .map((it) => declared.indexOf(it))
+      .filter((it) => it >= 0)
+    return {
+      ...messy, // returns , self
+      args: positions.map((position) => args[position]),
+    }
+  }
 }
 
-const logCall = (
-  detail: Record<string, string>,
+/**
+ * simple logger for calling frame, just log env, signature and selector,
+ * for most cases this should be enough
+ *
+ * @param env
+ * @param clazz
+ * @param method
+ * @param _returns
+ * @param _receiver
+ * @param selector
+ * @param _args
+ * @returns
+ */
+const trivial = (
+  env: Record<string, string>,
   clazz: string,
   method: string,
   _returns: any,
@@ -71,14 +122,19 @@ const logCall = (
 ): Partial<RuntimeRecorder> => {
   const signature = `[${clazz} ${method}]`
   const data = {
-    detail,
+    env,
     signature,
     selector,
   }
   return data
 }
 
-const $ = (raw: any) => {
+/**
+ * like Oc `@` symbol, construct an oc object from js handler
+ * @param raw the raw js handler
+ * @returns
+ */
+const at = (raw: any) => {
   if (
     !(raw instanceof NativePointer) &&
     !(typeof raw === 'object' && raw.hasOwnProperty('handle'))
@@ -91,28 +147,34 @@ const $ = (raw: any) => {
 
 rpc.exports = {
   init() {
+    /**
+     * normalize `trivial` | `by-label-argument-record` | `fully-customization-logger` configurations to the same shape
+     */
     const normalized = mapValues(configuration, (ary) =>
       ary.map((it) => {
-        if (isString(it)) {
-          return { symbol: it, logger: logCall }
+        // `trivial` logger
+        if (typeof it === 'string') {
+          return { symbol: it, logger: trivial }
         } else {
+          // expand `by-label-argument` array to labels of current message and log the corresponding parts, then merge with trivial version
           if (Array.isArray(it.logger)) {
             const { symbol, logger: labels } = it
             return {
               symbol,
               logger(...args: Parameters<RuntimeRecorder>) {
                 return {
-                  ...logCall(...args),
-                  ...logSpec(labels, ...args),
+                  ...trivial(...args),
+                  ...designated(labels, ...args),
                 }
               },
             }
           } else {
+            // fully customized logger callback, it's users' responsibility to log whatever they want
             const { symbol, logger } = it
             return {
               symbol,
               logger(...args: Parameters<RuntimeRecorder>) {
-                return { ...logCall(...args), ...logger(...args) }
+                return { ...trivial(...args), ...logger(...args) }
               },
             }
           }
@@ -120,6 +182,10 @@ rpc.exports = {
       })
     )
 
+    /**
+     * install hooks for presented classes and configured messages,
+     * report `missed` classes & methods by tag [[Summary]]
+     */
     const missed = Object.entries(normalized).map(([key, values]) => {
       const clazz = Oc.classes[key]
       if (!clazz) {
@@ -137,32 +203,26 @@ rpc.exports = {
               key,
               value.symbol,
               (origin, clazz, method, [self, cmd, ...args]) => {
-                const before = NSString['stringWithString:'](
-                  `before: ${method}`
-                )
-                DispatchedReporter['report:for:'](Summary, before)
                 const returns = origin(self, cmd, ...args)
-                const after = NSString['stringWithString:'](`after: ${method}`)
-                DispatchedReporter['report:for:'](Summary, after)
                 autoreleasepool(() => {
-                  const currentThread = Oc.classes['NSThread'].currentThread()
-                  const threadName = currentThread.name().toString()
-                  const main = currentThread.isMainThread()
+                  const currentThread = NSThread.currentThread()
+                  const env = {
+                    main: currentThread.isMainThread(),
+                    threadName: currentThread.name().toString(),
+                    pid: Process.id.toString(),
+                    tid: Process.getCurrentThreadId().toString(),
+                  }
+
                   const serialized = JSON.stringify(
                     value.logger(
-                      {
-                        main,
-                        threadName,
-                        pid: Process.id.toString(),
-                        tid: Process.getCurrentThreadId().toString(),
-                      },
+                      env,
                       clazz,
                       method,
-                      $(returns),
-                      $(self),
+                      at(returns),
+                      at(self),
                       Oc.selectorAsString(cmd),
                       ...args.map(
-                        (it) => $(it) // args maybe BOOL, which can not wrapped into Oc instance
+                        (it) => at(it) // args maybe BOOL, which can not wrapped into Oc instance
                       )
                     )
                   )
@@ -185,7 +245,7 @@ rpc.exports = {
     autoreleasepool(() => {
       const summary = NSString['stringWithString:'](Summary)
       const data = NSString['stringWithString:'](serialized)
-      DispatchedReporter['report:for:'](data, summary)
+      DispatchedReporter['report:for:'](summary, data)
     })
   },
   dispose() {},
