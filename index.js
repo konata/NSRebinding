@@ -1353,11 +1353,29 @@ module.exports = e;
 
 var r = this && this.__assign || function() {
   return (r = Object.assign || function(r) {
-    for (var t, n = 1, e = arguments.length; n < e; n++) for (var i in t = arguments[n]) Object.prototype.hasOwnProperty.call(t, i) && (r[i] = t[i]);
+    for (var e, t = 1, n = arguments.length; t < n; t++) for (var i in e = arguments[t]) Object.prototype.hasOwnProperty.call(e, i) && (r[i] = e[i]);
     return r;
   }).apply(this, arguments);
-}, t = this && this.__spreadArray || function(r, t) {
-  for (var n = 0, e = t.length, i = r.length; n < e; n++, i++) r[i] = t[n];
+}, e = this && this.__read || function(r, e) {
+  var t = "function" == typeof Symbol && r[Symbol.iterator];
+  if (!t) return r;
+  var n, i, o = t.call(r), a = [];
+  try {
+    for (;(void 0 === e || e-- > 0) && !(n = o.next()).done; ) a.push(n.value);
+  } catch (r) {
+    i = {
+      error: r
+    };
+  } finally {
+    try {
+      n && !n.done && (t = o.return) && t.call(o);
+    } finally {
+      if (i) throw i.error;
+    }
+  }
+  return a;
+}, t = this && this.__spreadArray || function(r, e) {
+  for (var t = 0, n = e.length, i = r.length; t < n; t++, i++) r[i] = e[t];
   return r;
 }, n = this && this.__importDefault || function(r) {
   return r && r.__esModule ? r : {
@@ -1369,102 +1387,123 @@ Object.defineProperty(exports, "__esModule", {
   value: !0
 });
 
-var e = n(require("lodash/mapValues")), i = n(require("lodash/pickBy")), o = require("./oc"), s = "Hook", a = "Summary", l = ObjC, u = l.classes, f = u.DispatchedReporter, c = u.NSString, g = u.NSAutoreleasePool;
+var i = n(require("lodash/mapValues")), o = n(require("lodash/pickBy")), a = require("./oc"), s = "Hook", l = "Summary", u = ObjC, c = u.classes, f = c.DispatchedReporter, g = c.NSString, p = c.NSAutoreleasePool, v = c.NSThread;
 
-function p(r, t, n) {
-  var e = l.classes[r][t], i = e.implementation;
-  return e.implementation = l.implement(e, (function() {
-    for (var e = [], o = 0; o < arguments.length; o++) e[o] = arguments[o];
-    return n(i, r, t, e);
-  })), e.implementation;
+function y(r, e, t) {
+  var n = u.classes[r][e], i = n.implementation;
+  return n.implementation = u.implement(n, (function() {
+    for (var n = [], o = 0; o < arguments.length; o++) n[o] = arguments[o];
+    return t(i, r, e, n);
+  })), n.implementation;
 }
 
-var h = function(r) {
-  var t = g.alloc().init();
+var d = function(r) {
+  var e = p.alloc().init();
   try {
     r();
   } finally {
-    t.release();
+    e.release();
   }
-}, y = function(r, t, n, e, i, o, s) {
-  for (var a = [], l = 7; l < arguments.length; l++) a[l - 7] = arguments[l];
-  return {};
-}, m = function(r, t, n, e, i, o) {
-  for (var s = [], a = 6; a < arguments.length; a++) s[a - 6] = arguments[a];
-  var l = "[" + t + " " + n + "]", u = {
-    detail: r,
+}, h = function(n, i, o, a, s, l, u) {
+  for (var c = [], f = 7; f < arguments.length; f++) c[f - 7] = arguments[f];
+  var g = new (Set.bind.apply(Set, t([ void 0 ], e(n))));
+  if (g.delete("*")) return {
+    returns: s,
+    receiver: l,
+    args: c
+  };
+  var p = Object.create({});
+  g.delete("returns") && Object.assign(p, {
+    returns: s
+  }), g.delete("self") && Object.assign(p, {
+    receiver: l
+  });
+  var v = a.replace(/^[-+]\s*/g, "").split(":");
+  v.pop();
+  var y = n.map((function(r) {
+    return v.indexOf(r);
+  })).filter((function(r) {
+    return r >= 0;
+  }));
+  return r(r({}, p), {
+    args: y.map((function(r) {
+      return c[r];
+    }))
+  });
+}, m = function(r, e, t, n, i, o) {
+  for (var a = [], s = 6; s < arguments.length; s++) a[s - 6] = arguments[s];
+  var l = "[" + e + " " + t + "]", u = {
+    env: r,
     signature: l,
     selector: o
   };
   return u;
-}, v = function(r) {
-  return r instanceof NativePointer || "object" == typeof r && r.hasOwnProperty("handle") ? new l.Object(r) : r;
+}, b = function(r) {
+  return r instanceof NativePointer || "object" == typeof r && r.hasOwnProperty("handle") ? new u.Object(r) : r;
 };
 
 rpc.exports = {
   init: function() {
-    var n = e.default(o.configuration, (function(n) {
+    var n = i.default(a.configuration, (function(n) {
       return n.map((function(n) {
         if ("string" == typeof n) return {
           symbol: n,
           logger: m
         };
         if (Array.isArray(n.logger)) {
-          var e = n.symbol, i = n.logger;
+          var i = n.symbol, o = n.logger;
           return {
-            symbol: e,
+            symbol: i,
             logger: function() {
-              for (var n = [], e = 0; e < arguments.length; e++) n[e] = arguments[e];
-              return r(r({}, m.apply(void 0, n)), y.apply(void 0, t([ i ], n)));
+              for (var n = [], i = 0; i < arguments.length; i++) n[i] = arguments[i];
+              return r(r({}, m.apply(void 0, t([], e(n)))), h.apply(void 0, t([ o ], e(n))));
             }
           };
         }
-        e = n.symbol;
-        var o = n.logger;
+        i = n.symbol;
+        var a = n.logger;
         return {
-          symbol: e,
+          symbol: i,
           logger: function() {
-            for (var t = [], n = 0; n < arguments.length; n++) t[n] = arguments[n];
-            return r(r({}, m.apply(void 0, t)), o.apply(void 0, t));
+            for (var n = [], i = 0; i < arguments.length; i++) n[i] = arguments[i];
+            return r(r({}, m.apply(void 0, t([], e(n)))), a.apply(void 0, t([], e(n))));
           }
         };
       }));
-    })), u = Object.entries(n).map((function(r) {
-      var n, e, i = r[0], o = r[1], u = l.classes[i];
-      if (u) {
-        var g = o.map((function(r) {
-          if (u.$ownMethods.includes(r.symbol)) {
-            l.classes[i][r.symbol];
-            return p(i, r.symbol, (function(n, e, i, o) {
-              var u = o[0], g = o[1], p = o.slice(2), y = c["stringWithString:"]("before: " + i);
-              f["report:for:"](a, y);
-              var m = n.apply(void 0, t([ u, g ], p)), d = c["stringWithString:"]("after: " + i);
-              return f["report:for:"](a, d), h((function() {
-                var n = l.classes.NSThread.currentThread(), o = n.name().toString(), a = n.isMainThread(), h = JSON.stringify(r.logger.apply(r, t([ {
-                  main: a,
-                  threadName: o,
+    })), c = Object.entries(n).map((function(r) {
+      var n, i, o = e(r, 2), a = o[0], l = o[1], c = u.classes[a];
+      if (c) {
+        var p = l.map((function(r) {
+          if (c.$ownMethods.includes(r.symbol)) {
+            u.classes[a][r.symbol];
+            return y(a, r.symbol, (function(n, i, o, a) {
+              var l = e(a), c = l[0], p = l[1], y = l.slice(2), h = n.apply(void 0, t([ c, p ], e(y)));
+              return d((function() {
+                var n = v.currentThread(), a = {
+                  main: n.isMainThread(),
+                  threadName: n.name().toString(),
                   pid: Process.id.toString(),
                   tid: Process.getCurrentThreadId().toString()
-                }, e, i, v(m), v(u), l.selectorAsString(g) ], p.map((function(r) {
-                  return v(r);
-                }))))), y = c["stringWithString:"](s), d = c["stringWithString:"](h);
-                f["report:for:"](d, y);
-              })), m;
+                }, l = JSON.stringify(r.logger.apply(r, t([ a, i, o, b(h), b(c), u.selectorAsString(p) ], e(y.map((function(r) {
+                  return b(r);
+                })))))), d = g["stringWithString:"](s), m = g["stringWithString:"](l);
+                f["report:for:"](m, d);
+              })), h;
             })), "";
           }
-          return console.error("missing " + i + ":" + JSON.stringify(r)), r.symbol;
+          return console.error("missing " + a + ":" + JSON.stringify(r)), r.symbol;
         }));
-        return (e = {})[i] = g.filter((function(r) {
+        return (i = {})[a] = p.filter((function(r) {
           return !r;
-        })), e;
+        })), i;
       }
-      return console.error("missing class: " + i), (n = {})[i] = "*", n;
-    })), g = i.default(u, (function(r) {
+      return console.error("missing class: " + a), (n = {})[a] = "*", n;
+    })), p = o.default(c, (function(r) {
       return r.length;
-    })), d = JSON.stringify(g);
-    h((function() {
-      var r = c["stringWithString:"](a), t = c["stringWithString:"](d);
-      f["report:for:"](t, r);
+    })), S = JSON.stringify(p);
+    d((function() {
+      var r = g["stringWithString:"](l), e = g["stringWithString:"](S);
+      f["report:for:"](r, e);
     }));
   },
   dispose: function() {}
@@ -1477,71 +1516,96 @@ var e, t = this && this.__makeTemplateObject || function(e, t) {
   return Object.defineProperty ? Object.defineProperty(e, "raw", {
     value: t
   }) : e.raw = t, e;
+}, r = this && this.__read || function(e, t) {
+  var r = "function" == typeof Symbol && e[Symbol.iterator];
+  if (!r) return e;
+  var i, a, o = r.call(e), n = [];
+  try {
+    for (;(void 0 === t || t-- > 0) && !(i = o.next()).done; ) n.push(i.value);
+  } catch (e) {
+    a = {
+      error: e
+    };
+  } finally {
+    try {
+      i && !i.done && (r = o.return) && r.call(o);
+    } finally {
+      if (a) throw a.error;
+    }
+  }
+  return n;
 };
 
 function i(e) {
-  return function() {
-    for (var t = [], i = 0; i < arguments.length; i++) t[i] = arguments[i];
+  var t = function() {
+    for (var t = [], r = 0; r < arguments.length; r++) t[r] = arguments[r];
     return {
       symbol: e,
       logger: t
     };
   };
+  return t.self = {
+    symbol: e,
+    logger: [ "self" ]
+  }, t.returns = {
+    symbol: e,
+    logger: [ "returns" ]
+  }, t.all = {
+    symbol: e,
+    logger: [ "*" ]
+  }, t;
 }
 
 Object.defineProperty(exports, "__esModule", {
   value: !0
 }), exports.configuration = void 0;
 
-var r, a, o, n, l = function(e) {
-  return "$" + e[0];
-}, s = function(e) {
-  return "#" + e[0];
+var a, o, n, s, l = function(e) {
+  return e;
 }, u = function(e) {
-  return "_" + e[0];
+  return "$" + r(e, 1)[0];
 }, c = function(e) {
+  return "#" + r(e, 1)[0];
+}, p = function(e) {
+  return "_" + r(e, 1)[0];
+}, d = function(e) {
   return "";
 };
 
 exports.configuration = ((e = {
-  UINavigationController: [ i("- pushViewController:animated:")("self", "pushViewController", "returns") ],
-  UIViewController: [ "- presentViewController:animated:completion:" ],
-  UNUserNotificationCenter: [ "- requestAuthorizationWithOptions:completionHandler:" ],
-  AVCaptureDevice: [ i("+ authorizationStatusForMediaType:")("authorizationStatusForMediaType"), i("+ requestAccessForMediaType:completionHandler:")("requestAccessForMediaType") ],
-  MPMediaQuery: [ "- init", "+ new" ],
-  MPMediaLibrary: [ "+ authorizationStatus" ],
-  MPMediaPropertyPredicate: [ "+ predicateWithValue:forProperty:", "+ predicateWithValue:forProperty:comparisonType:" ],
-  PHPhotoLibrary: [ "+ authorizationStatus", "+ requestAuthorization:" ],
   CNContactStore: [ "- requestAccessForEntityType:completionHandler:" ],
   CLLocationManager: [ "+ locationServicesEnabled", "- requestWhenInUseAuthorization", "- requestAlwaysAuthorization", "- requestTemporaryFullAccuracyAuthorizationWithPurposeKey:completion:", "- startUpdatingLocation", "- stopUpdatingLocation", "- requestLocation" ],
+  AVCaptureDevice: [ i("+ authorizationStatusForMediaType:")("authorizationStatusForMediaType"), i("+ requestAccessForMediaType:completionHandler:")("requestAccessForMediaType") ],
+  PHPhotoLibrary: [ "+ authorizationStatus", "+ requestAuthorization:" ],
+  CBCentralManager: [ "- initWithDelegate:queue:options:" ],
   ATTrackingManager: [ "+ requestTrackingAuthorizationWithCompletionHandler:" ],
   ASIdentifierManager: [ "+ sharedManager", "- advertisingIdentifier" ],
-  CBCentralManager: [ "- initWithDelegate:queue:options:" ],
   HKObjectType: [ "+ quantityTypeForIdentifier:" ],
-  HKHealthStore: [ "- requestAuthorizationToShareTypes:readTypes:completion:", "- executeQuery:" ],
-  HKStatisticsQuery: [ "- initWithQuantityType:quantitySamplePredicate:options:completionHandler:" ],
-  HKSampleQuery: [ "- initWithSampleType:predicate:limit:sortDescriptors:resultsHandler:" ],
-  CMMotionActivityManager: [ "+ authorizationStatus", "- queryActivityStartingFromDate:toDate:toQueue:withHandler:", "- startActivityUpdatesToQueue:withHandler:" ],
   EKEventStore: [ "- requestAccessToEntityType:completion:" ],
-  NEHotspotNetwork: [ "+ fetchCurrentWithCompletionHandler:" ]
-})[l(r || (r = t([ "WKScriptMessageHandler" ], [ "WKScriptMessageHandler" ])))] = [ "- userContentController:didReceiveScriptMessage:" ], 
-e.WKWebView = [ "- loadRequest:", "- loadHTMLString:baseURL:", "- evaluateJavaScript:completionHandler:" ], 
-e.WKUserContentController = [ "- addScriptMessageHandler:name:", "- addScriptMessageHandler:contentWorld:name:", "- removeScriptMessageHandlerForName:" ], 
-e[l(a || (a = t([ "WKUIDelegate" ], [ "WKUIDelegate" ])))] = [ "- webView:runJavaScriptAlertPanelWithMessage:initiatedByFrame:completionHandler:", "- webView:runJavaScriptConfirmPanelWithMessage:initiatedByFrame:completionHandler:", "- webView:runJavaScriptTextInputPanelWithPrompt:defaultText:initiatedByFrame:completionHandler:" ], 
-e[l(o || (o = t([ "WKNavigationDelegate" ], [ "WKNavigationDelegate" ])))] = [ "- webView:decidePolicyForNavigationAction:decisionHandler:" ], 
+  NEHotspotNetwork: [ "+ fetchCurrentWithCompletionHandler:" ],
+  WKWebView: [ i("- loadRequest:")("loadRequest"), i("- loadHTMLString:baseURL:")("loadHTMLString", "baseURL"), "- evaluateJavaScript:completionHandler:" ],
+  WKUserContentController: [ "- addScriptMessageHandler:name:", "- addScriptMessageHandler:contentWorld:name:", "- removeScriptMessageHandlerForName:" ]
+})[u(a || (a = t([ "WKScriptMessageHandler" ], [ "WKScriptMessageHandler" ])))] = [ "- userContentController:didReceiveScriptMessage:" ], 
 e.WKHTTPCookieStore = [ "- setCookie:completionHandler:" ], e.NSURL = [ "+ URLWithString:" ], 
 e.NSURLRequest = [ "- initWithURL:" ], e.NSURLSession = [ "+ sessionWithConfiguration:delegate:delegateQueue:", "- dataTaskWithRequest:completionHandler:", "- dataTaskWithRequest:" ], 
-e.NSURLSessionDataTask = [ "- resume" ], e.NSURLConnection = [ "+ sendSynchronousRequest:returningResponse:error:", "+ sendAsynchronousRequest:queue:completionHandler:" ], 
 e.NSMutableURLRequest = [ "- setURL:", "- setHTTPMethod:", "- setValue:forHTTPHeaderField:", "- addValue:forHTTPHeaderField:", "- setHTTPBody:" ], 
-e[l(n || (n = t([ "UIApplicationDelegate" ], [ "UIApplicationDelegate" ])))] = [ "- application:handleOpenURL:", "- application:openURL:sourceApplication:annotation:", "- application:openURL:options:" ], 
+e.NSFileManager = [ "- createFileAtPath:contents:attributes:", l("- createDirectoryAtPath:withIntermediateDirectories:attributes:error:"), "- changeCurrentDirectoryPath:", "- copyItemAtPath:toPath:error:", l("- removeItemAtPath:error:") ], 
+e.UNUserNotificationCenter = [ "- requestAuthorizationWithOptions:completionHandler:" ], 
+e.MPMediaQuery = [ "- init", "+ new" ], e.MPMediaLibrary = [ "+ authorizationStatus" ], 
+e.MPMediaPropertyPredicate = [ "+ predicateWithValue:forProperty:", "+ predicateWithValue:forProperty:comparisonType:" ], 
+e.HKHealthStore = [ "- requestAuthorizationToShareTypes:readTypes:completion:", "- executeQuery:" ], 
+e.HKStatisticsQuery = [ "- initWithQuantityType:quantitySamplePredicate:options:completionHandler:" ], 
+e.HKSampleQuery = [ "- initWithSampleType:predicate:limit:sortDescriptors:resultsHandler:" ], 
+e.CMMotionActivityManager = [ "+ authorizationStatus", "- queryActivityStartingFromDate:toDate:toQueue:withHandler:", "- startActivityUpdatesToQueue:withHandler:" ], 
+e[u(o || (o = t([ "WKUIDelegate" ], [ "WKUIDelegate" ])))] = [ "- webView:runJavaScriptAlertPanelWithMessage:initiatedByFrame:completionHandler:", "- webView:runJavaScriptConfirmPanelWithMessage:initiatedByFrame:completionHandler:", "- webView:runJavaScriptTextInputPanelWithPrompt:defaultText:initiatedByFrame:completionHandler:" ], 
+e[u(n || (n = t([ "WKNavigationDelegate" ], [ "WKNavigationDelegate" ])))] = [ "- webView:decidePolicyForNavigationAction:decisionHandler:" ], 
+e.NSURLSessionDataTask = [ "- resume" ], e.NSURLConnection = [ l("+ sendSynchronousRequest:returningResponse:error:"), "+ sendAsynchronousRequest:queue:completionHandler:" ], 
+e[u(s || (s = t([ "UIApplicationDelegate" ], [ "UIApplicationDelegate" ])))] = [ "- application:handleOpenURL:", "- application:openURL:sourceApplication:annotation:", "- application:openURL:options:" ], 
 e.UIApplication = [ "- canOpenURL:", "- openURL:", "- openURL:options:completionHandler:" ], 
-e.UIAlertView = [ "- initWithTitle:message:delegate:cancelButtonTitle:otherButtonTitles:" ], 
-e.UIAlertController = [ "+ alertControllerWithTitle:message:preferredStyle:" ], 
-e.UIAlertAction = [ "+ actionWithTitle:style:handler:" ], e.NSFileManager = [ "- createFileAtPath:contents:attributes:", "- createDirectoryAtPath:withIntermediateDirectories:attributes:error:", "- changeCurrentDirectoryPath:", "- copyItemAtPath:toPath:error:", "- removeItemAtPath:error:" ], 
 e.LAContext = [ "- canEvaluatePolicy:error:", "- evaluatePolicy:localizedReason:reply:" ], 
 e.SFSpeechRecognizer = [ "+ requestAuthorization:", "- recognitionTaskWithRequest:resultHandler:" ], 
 e.AVAudioEngine = [ "- startAndReturnError:", "- stop" ], e.SFSpeechAudioBufferRecognitionRequest = [ "- endAudio" ], 
 e.NFCNDEFReaderSession = [ "- initWithDelegate:queue:invalidateAfterFirstRead:", "- beginSession", "- invalidateSession" ], 
-e.HMHomeManager = [ "+ new", "- registerHandler:handler:" ], e);
+e.HMHomeManager = [ "- setDelegate:" ], e);
 
 },{}]},{},[131]);
