@@ -26,20 +26,14 @@ type ArgumentsOf<M extends string> = M extends `${infer Fst}:${infer Rst}`
  */
 type Predefined = 'self' | 'returns' | '*'
 
-/**
- * marks
- */
-type Class = string
-type Protocol = string
-type Abstract = string
-type Hidden = string
+export type Class = string
 
 /**
  * selector format
  */
 type InstanceMethod = `- ${string}`
 type ClassMethod = `+ ${string}`
-type Selector = InstanceMethod | ClassMethod
+export type Selector = InstanceMethod | ClassMethod
 
 /**
  * output of a recorder function
@@ -72,9 +66,9 @@ export type RuntimeRecorder = (
  * specify {name, polish} to customize your partial output, as it will merged into the normal stringify process
  */
 export type RuntimeCfg = Record<
-  Class | Protocol | Abstract | Hidden,
+  Class,
   Array<
-    | Selector // just log invocation
+    | Selector
     | {
         symbol: Selector
         logger:
@@ -126,9 +120,7 @@ type PrivacyRecord =
 type PrivacyRecords = Array<PrivacyRecord>
 
 /**
- *
- * @param symbol shorthand to convert a symbol to an object with symbol & logger
- * @returns
+ * shorthand to convert a symbol to an object with symbol & logger
  */
 export function $<T extends string>(symbol: T) {
   const callable: {
@@ -150,25 +142,27 @@ export function $<T extends string>(symbol: T) {
  */
 export const danger = <T extends string>(src: T): T => src
 
+export type NormalizedCfgValue = Array<{
+  symbol: Selector
+  logger: ReplaceReturn<RuntimeRecorder, Partial<RuntimeSnapshot>>
+}>
+
 /**
- *
- * @param clazz mark protocol setter
- * @param _
- * @param selector
- * @returns
+ * specify selector and which arguments to hook
  */
-export const protocol = (
-  _: TemplateStringsArray,
-  clazz: string,
-  selector: `${`+` | '-'} ${string}:`
-) => `@protocol#${clazz}#${selector}`
+export const argumentOf = (
+  clazz: Class,
+  spec: `${string}@${Selector}`,
+  protocol: Class
+) => `${clazz}#${spec}#${protocol}`
 
-export const decompileProtocol = (compiled: string) => {
-  const [, clazz, selector] = compiled.split(/#/g)
-}
+/**
+ * mark this configuration as unsafe a.k.a I dont know how to resolve the target method
+ */
+export const unsafe = ([f]: TemplateStringsArray) => f
 
-// export const pr= ([clazz, selector, ]: ReadonlyArray<string>) => `${literal}`
-
-export const abstract = ([literal]: ReadonlyArray<string>) => `#${literal}`
-export const hidden = ([literal]: ReadonlyArray<string>) => `_${literal}`
-export const defaults = (_: ReadonlyArray<string>) => ``
+/**
+ * specify the message, we'll infer the only arguments
+ */
+export const setterOf = (clazz: Class, setter: Selector, protocol: Class) =>
+  `${clazz}#${setter.replace(/^[+-]\s+|:$/g, '')}@${setter}#${protocol}`
