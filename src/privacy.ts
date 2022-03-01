@@ -1,4 +1,4 @@
-import { protocol, RuntimeCfg } from './foundation'
+import { RuntimeCfg, setterOf, unsafe } from './foundation'
 
 export const privacies: RuntimeCfg = {
   /**
@@ -28,7 +28,11 @@ export const privacies: RuntimeCfg = {
    * since iOS11 UIImagePickerController runs in a separated process for just read-only access
    */
   UIImagePickerController: [], //
-  [protocol`UIImagePickerControllerDelegate`]: [
+  [setterOf(
+    `UIImagePickerController`,
+    '- setDelegate:',
+    `UIImagePickerControllerDelegate`
+  )]: [
     '- imagePickerController:didFinishPickingMediaWithInfo:', // actually read image or photo
     '- imagePickerController:didFinishPickingImage:editingInfo:', // actually read image or photo
   ],
@@ -40,7 +44,11 @@ export const privacies: RuntimeCfg = {
    * no permission required, limited collections of albums & photos Since iOS 14, system host it in a separated process
    */
   PHPickerViewController: [],
-  [protocol`PHPickerViewControllerDelegate`]: ['- picker:didFinishPicking:'], // actually read meta data
+  [setterOf(
+    `PHPickerViewController`,
+    '- setDelegate:',
+    'PHPickerViewControllerDelegate'
+  )]: ['- picker:didFinishPicking:'], // actually read meta data
 
   /**
    * category: [[mediaLibrary]]
@@ -136,7 +144,12 @@ export const privacies: RuntimeCfg = {
   RPBroadcastController: [
     '- startBroadcastWithHandler:', // manually start broadcast, for #iOS(<=10)
   ],
-  [protocol`RPBroadcastSampleHandler`]: [
+
+  /**
+   * TODO
+   * dont known what is the invocation,
+   */
+  [unsafe`RPBroadcastSampleHandler`]: [
     '- broadcastStartedWithSetupInfo:', // automatically start broadcast notification for #iOS(>10)
   ],
 
@@ -149,7 +162,11 @@ export const privacies: RuntimeCfg = {
     '- requestWhenInUseAuthorization',
     '- requestAlwaysAuthorization',
   ],
-  [protocol`CLLocationManagerDelegate`]: [
+  [setterOf(
+    'CLLocationManager',
+    '- setDelegate:',
+    `CLLocationManagerDelegate`
+  )]: [
     '- locationManager:didUpdateLocations:',
     '- locationManager:didUpdateToLocation:fromLocation:',
     '- locationManager:didEnterRegion:',
