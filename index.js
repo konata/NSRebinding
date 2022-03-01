@@ -1353,29 +1353,29 @@ module.exports = e;
 
 var r = this && this.__assign || function() {
   return (r = Object.assign || function(r) {
-    for (var e, t = 1, n = arguments.length; t < n; t++) for (var i in e = arguments[t]) Object.prototype.hasOwnProperty.call(e, i) && (r[i] = e[i]);
+    for (var t, e = 1, n = arguments.length; e < n; e++) for (var i in t = arguments[e]) Object.prototype.hasOwnProperty.call(t, i) && (r[i] = t[i]);
     return r;
   }).apply(this, arguments);
-}, e = this && this.__read || function(r, e) {
-  var t = "function" == typeof Symbol && r[Symbol.iterator];
-  if (!t) return r;
-  var n, i, o = t.call(r), a = [];
+}, t = this && this.__read || function(r, t) {
+  var e = "function" == typeof Symbol && r[Symbol.iterator];
+  if (!e) return r;
+  var n, i, o = e.call(r), a = [];
   try {
-    for (;(void 0 === e || e-- > 0) && !(n = o.next()).done; ) a.push(n.value);
+    for (;(void 0 === t || t-- > 0) && !(n = o.next()).done; ) a.push(n.value);
   } catch (r) {
     i = {
       error: r
     };
   } finally {
     try {
-      n && !n.done && (t = o.return) && t.call(o);
+      n && !n.done && (e = o.return) && e.call(o);
     } finally {
       if (i) throw i.error;
     }
   }
   return a;
-}, t = this && this.__spreadArray || function(r, e) {
-  for (var t = 0, n = e.length, i = r.length; t < n; t++, i++) r[i] = e[t];
+}, e = this && this.__spreadArray || function(r, t) {
+  for (var e = 0, n = t.length, i = r.length; e < n; e++, i++) r[i] = t[e];
   return r;
 }, n = this && this.__importDefault || function(r) {
   return r && r.__esModule ? r : {
@@ -1387,36 +1387,38 @@ Object.defineProperty(exports, "__esModule", {
   value: !0
 });
 
-var i = n(require("lodash/mapValues")), o = n(require("lodash/pickBy")), a = require("./oc"), s = "Hook", l = "Summary", u = ObjC, c = u.classes, f = c.DispatchedReporter, g = c.NSString, p = c.NSAutoreleasePool, v = c.NSThread;
+var i = n(require("lodash/mapValues")), o = n(require("lodash/pickBy")), a = require("./oc"), s = "Hook", l = "Summary", u = ObjC, f = u.classes, c = f.DispatchedReporter, g = f.NSString, p = f.NSAutoreleasePool, v = f.NSThread, y = !0;
 
-function y(r, e, t) {
-  var n = u.classes[r][e], i = n.implementation;
+function d(r, t, e) {
+  var n = u.classes[r][t], i = n.implementation;
   return n.implementation = u.implement(n, (function() {
     for (var n = [], o = 0; o < arguments.length; o++) n[o] = arguments[o];
-    return t(i, r, e, n);
+    return e(i, r, t, n);
   })), n.implementation;
 }
 
-var d = function(r) {
-  var e = p.alloc().init();
+var h = function(r) {
+  var t = p.alloc().init();
   try {
     r();
   } finally {
-    e.release();
+    t.release();
   }
-}, h = function(n, i, o, a, s, l, u) {
-  for (var c = [], f = 7; f < arguments.length; f++) c[f - 7] = arguments[f];
-  var g = new (Set.bind.apply(Set, t([ void 0 ], e(n))));
+}, m = function(n, i, o, a, s, l, u) {
+  for (var f = [], c = 7; c < arguments.length; c++) f[c - 7] = arguments[c];
+  var g = new (Set.bind.apply(Set, e([ void 0 ], t(n))));
   if (g.delete("*")) return {
-    returns: s,
-    receiver: l,
-    args: c
+    returns: b(s).toString(),
+    receiver: b(l).toString(),
+    args: f.map((function(r) {
+      return b(r).toString();
+    }))
   };
   var p = Object.create({});
   g.delete("returns") && Object.assign(p, {
-    returns: s
+    returns: b(s).toString()
   }), g.delete("self") && Object.assign(p, {
-    receiver: l
+    receiver: b(l).toString()
   });
   var v = a.replace(/^[-+]\s*/g, "").split(":");
   v.pop();
@@ -1427,12 +1429,12 @@ var d = function(r) {
   }));
   return r(r({}, p), {
     args: y.map((function(r) {
-      return c[r];
+      return b(f[r]).toString();
     }))
   });
-}, m = function(r, e, t, n, i, o) {
+}, S = function(r, t, e, n, i, o) {
   for (var a = [], s = 6; s < arguments.length; s++) a[s - 6] = arguments[s];
-  var l = "[" + e + " " + t + "]", u = {
+  var l = "[" + t + " " + e + "]", u = {
     env: r,
     signature: l,
     selector: o
@@ -1448,7 +1450,7 @@ rpc.exports = {
       return n.map((function(n) {
         if ("string" == typeof n) return {
           symbol: n,
-          logger: m
+          logger: S
         };
         if (Array.isArray(n.logger)) {
           var i = n.symbol, o = n.logger;
@@ -1456,7 +1458,7 @@ rpc.exports = {
             symbol: i,
             logger: function() {
               for (var n = [], i = 0; i < arguments.length; i++) n[i] = arguments[i];
-              return r(r({}, m.apply(void 0, t([], e(n)))), h.apply(void 0, t([ o ], e(n))));
+              return r(r({}, S.apply(void 0, e([], t(n)))), m.apply(void 0, e([ o ], t(n))));
             }
           };
         }
@@ -1466,29 +1468,31 @@ rpc.exports = {
           symbol: i,
           logger: function() {
             for (var n = [], i = 0; i < arguments.length; i++) n[i] = arguments[i];
-            return r(r({}, m.apply(void 0, t([], e(n)))), a.apply(void 0, t([], e(n))));
+            return r(r({}, S.apply(void 0, e([], t(n)))), a.apply(void 0, e([], t(n))));
           }
         };
       }));
-    })), c = Object.entries(n).map((function(r) {
-      var n, i, o = e(r, 2), a = o[0], l = o[1], c = u.classes[a];
-      if (c) {
+    })), f = Object.entries(n).map((function(r) {
+      var n, i, o = t(r, 2), a = o[0], l = o[1], f = u.classes[a];
+      if (f) {
         var p = l.map((function(r) {
-          if (c.$ownMethods.includes(r.symbol)) {
+          if (f.$ownMethods.includes(r.symbol)) {
             u.classes[a][r.symbol];
-            return y(a, r.symbol, (function(n, i, o, a) {
-              var l = e(a), c = l[0], p = l[1], y = l.slice(2), h = n.apply(void 0, t([ c, p ], e(y)));
-              return d((function() {
+            return d(a, r.symbol, (function(n, i, o, a) {
+              var l = t(a), f = l[0], p = l[1], y = l.slice(2);
+              c["report:for:"]("before", o);
+              var d = n.apply(void 0, e([ f, p ], t(y)));
+              return c["report:for:"]("after", o), h((function() {
                 var n = v.currentThread(), a = {
                   main: n.isMainThread(),
                   threadName: n.name().toString(),
                   pid: Process.id.toString(),
                   tid: Process.getCurrentThreadId().toString()
-                }, l = JSON.stringify(r.logger.apply(r, t([ a, i, o, b(h), b(c), u.selectorAsString(p) ], e(y.map((function(r) {
-                  return b(r);
-                })))))), d = g["stringWithString:"](s), m = g["stringWithString:"](l);
-                f["report:for:"](m, d);
-              })), h;
+                }, l = JSON.stringify(r.logger.apply(r, e([ a, i, o, d, f, u.selectorAsString(p) ], t(y.map((function(r) {
+                  return r;
+                })))))), h = g["stringWithString:"](s), m = g["stringWithString:"](l);
+                c["report:for:"](m, h);
+              })), d;
             })), "";
           }
           return console.error("missing " + a + ":" + JSON.stringify(r)), r.symbol;
@@ -1498,12 +1502,12 @@ rpc.exports = {
         })), i;
       }
       return console.error("missing class: " + a), (n = {})[a] = "*", n;
-    })), p = o.default(c, (function(r) {
+    })), p = o.default(f, (function(r) {
       return r.length;
-    })), S = JSON.stringify(p);
-    d((function() {
-      var r = g["stringWithString:"](l), e = g["stringWithString:"](S);
-      f["report:for:"](r, e);
+    })), y = JSON.stringify(p);
+    h((function() {
+      var r = g["stringWithString:"](l), t = g["stringWithString:"](y);
+      c["report:for:"](r, t);
     }));
   },
   dispose: function() {}

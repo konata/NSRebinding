@@ -1,11 +1,13 @@
 import mapValues from 'lodash/mapValues'
 import pickBy from 'lodash/pickBy'
-import { configuration, RuntimeRecorder } from './oc'
+import { RuntimeRecorder } from './foundation'
+import { configuration } from './oc'
 
 const Hook = 'Hook'
 const Summary = 'Summary'
 const Oc = ObjC
 const { DispatchedReporter, NSString, NSAutoreleasePool, NSThread } = Oc.classes
+const Debug = true
 
 /**
  * method swizzling for both oc-runtime method and native method
@@ -71,17 +73,17 @@ const designated = (
   const uniques = new Set(...labels)
   if (uniques.delete('*')) {
     return {
-      returns,
-      receiver,
-      args,
+      returns: at(returns).toString(),
+      receiver: at(receiver).toString(),
+      args: args.map((it) => at(it).toString()),
     }
   } else {
     const messy = Object.create({})
     if (uniques.delete('returns')) {
-      Object.assign(messy, { returns })
+      Object.assign(messy, { returns: at(returns).toString() })
     }
     if (uniques.delete('self')) {
-      Object.assign(messy, { receiver })
+      Object.assign(messy, { receiver: at(receiver).toString() })
     }
 
     // mapping arguments
@@ -93,7 +95,7 @@ const designated = (
       .filter((it) => it >= 0)
     return {
       ...messy, // returns , self
-      args: positions.map((position) => args[position]),
+      args: positions.map((position) => at(args[position]).toString()),
     }
   }
 }
@@ -203,7 +205,10 @@ rpc.exports = {
               key,
               value.symbol,
               (origin, clazz, method, [self, cmd, ...args]) => {
+                DispatchedReporter['report:for:']('before', method)
                 const returns = origin(self, cmd, ...args)
+                DispatchedReporter['report:for:']('after', method)
+
                 autoreleasepool(() => {
                   const currentThread = NSThread.currentThread()
                   const env = {
@@ -218,12 +223,11 @@ rpc.exports = {
                       env,
                       clazz,
                       method,
-                      at(returns),
-                      at(self),
+                      returns,
+                      self,
                       Oc.selectorAsString(cmd),
-                      ...args.map(
-                        (it) => at(it) // args maybe BOOL, which can not wrapped into Oc instance
-                      )
+                      // args maybe BOOL, which can not wrapped into Oc instance
+                      ...args.map((it) => it)
                     )
                   )
                   const hook = NSString['stringWithString:'](Hook)

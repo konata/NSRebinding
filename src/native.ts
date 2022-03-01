@@ -1,4 +1,4 @@
-import { RuntimeSnapshot as Snapshot } from './oc'
+import { RuntimeSnapshot as Snapshot, ReplaceReturn } from './foundation'
 
 /**
  * native symbol signature
@@ -8,7 +8,7 @@ type NativeSymbol = string
 type NativeInvocation = Omit<Snapshot, 'receiver' | 'cmd'>
 type NativeLogger = (returns: any, ...params: any[]) => NativeInvocation
 
-type NativeCfg = Record<
+export type NativeCfg = Record<
   ModuleName,
   Array<
     | NativeSymbol
