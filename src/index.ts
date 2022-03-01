@@ -1,6 +1,11 @@
 import mapValues from 'lodash/mapValues'
 import pickBy from 'lodash/pickBy'
-import { RuntimeRecorder } from './foundation'
+import {
+  Class,
+  NormalizedCfgValue,
+  RuntimeRecorder,
+  Selector,
+} from './foundation'
 import { configuration } from './oc'
 
 const Hook = 'Hook'
@@ -147,6 +152,60 @@ const at = (raw: any) => {
   }
 }
 
+/**
+ * compile configuration to dynamic proxy object
+ * 1. find the setter method call
+ * 2. hook corresponding method,
+ * 3. while invoking, dynamic create a proxy to delegate for designate protocol
+ *   3.1 generate methods object to handle protocol message per configuration
+ *   3.2 invoke configuration callbacks when protocol message received
+ * 4. replace argument with generated proxy
+ */
+const dynamicProxy = (
+  clazz: Class,
+  spec: `${string}@${Selector}`,
+  protocol: Class,
+  messages: NormalizedCfgValue
+) => {
+  const [label, selector] = spec.split('@')
+  const order = selector
+    .replace(/[+-]\s|:$/g, '')
+    .split(':')
+    .indexOf(label) // -1,0,1 etc
+
+  swizzle(clazz, selector, (origin, clazz, method, args) => {
+    const params = args
+    const src = args[order]
+    const $proxy = new (Oc.registerProxy({
+      protocols: [Oc.protocols[protocol]],
+      methods: messages.reduce(
+        (acc, ele) => ({
+          ...acc,
+          [ele.symbol](...args: any[]) {
+            const returns = (this as any).data.target[ele.symbol](...args)
+            const [self, , ...param] = args // calling convention -> self, cmd, ...args
+            ele.logger(
+              {}, // env
+              protocol,
+              method,
+              returns,
+              self,
+              ele.symbol,
+              ...param.map((it) => it)
+            )
+            return returns
+          },
+        }),
+        {}
+      ),
+    }))(src)
+
+    // replace designated param
+    params[order] = $proxy
+    return origin(...params)
+  })
+}
+
 rpc.exports = {
   init() {
     /**
@@ -192,7 +251,19 @@ rpc.exports = {
       const clazz = Oc.classes[key]
       if (!clazz) {
         console.error(`missing class: ${key}`)
-        return { [key]: '*' }
+        // handle protocol delegates
+        if (key.split('#').length === 3) {
+          const [clazz, tuples, protocol] = key.split('#')
+          const [, message] = tuples.split('@')
+          if (ObjC.classes[clazz]?.$ownMethods?.includes(message)) {
+            dynamicProxy(clazz, tuples as any, protocol, values)
+            return { [key]: [] }
+          } else {
+            return { [key]: [message] }
+          }
+        } else {
+          return { [key]: '*' }
+        }
       } else {
         const missed = values.map((value) => {
           // filter out all non-own methods, coz it may hook other sub classes
