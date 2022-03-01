@@ -1,4 +1,4 @@
-import { danger, protocol, RuntimeCfg, $ } from './foundation'
+import { argumentOf, setterOf, RuntimeCfg, $ } from './foundation'
 
 export const configuration: RuntimeCfg = {
   CNContactStore: ['- requestAccessForEntityType:completionHandler:'],
@@ -34,9 +34,13 @@ export const configuration: RuntimeCfg = {
     '- addScriptMessageHandler:contentWorld:name:', // iOS 14
     '- removeScriptMessageHandlerForName:',
   ],
-  [protocol`WKScriptMessageHandler`]: [
-    '- userContentController:didReceiveScriptMessage:',
-  ],
+
+  [argumentOf(
+    'WKUserContentController',
+    'addScriptMessageHandler@- addScriptMessageHandler:name:',
+    'WKScriptMessageHandler'
+  )]: ['- userContentController:didReceiveScriptMessage:'],
+
   WKHTTPCookieStore: ['- setCookie:completionHandler:'],
   NSURL: ['+ URLWithString:'],
   NSURLRequest: ['- initWithURL:'],
@@ -54,12 +58,10 @@ export const configuration: RuntimeCfg = {
   ],
   NSFileManager: [
     '- createFileAtPath:contents:attributes:',
-    danger(
-      '- createDirectoryAtPath:withIntermediateDirectories:attributes:error:'
-    ),
+    '- createDirectoryAtPath:withIntermediateDirectories:attributes:error:',
     '- changeCurrentDirectoryPath:',
     '- copyItemAtPath:toPath:error:',
-    danger('- removeItemAtPath:error:'),
+    '- removeItemAtPath:error:',
   ],
 
   UNUserNotificationCenter: [
@@ -92,27 +94,30 @@ export const configuration: RuntimeCfg = {
     '- queryActivityStartingFromDate:toDate:toQueue:withHandler:',
     '- startActivityUpdatesToQueue:withHandler:',
   ],
-  [protocol`WKUIDelegate`]: [
+  [setterOf(`WKWebView`, '+ setUIDelegate:', `WKUIDelegate`)]: [
     '- webView:runJavaScriptAlertPanelWithMessage:initiatedByFrame:completionHandler:',
     '- webView:runJavaScriptConfirmPanelWithMessage:initiatedByFrame:completionHandler:',
     '- webView:runJavaScriptTextInputPanelWithPrompt:defaultText:initiatedByFrame:completionHandler:',
   ],
-  [protocol`WKNavigationDelegate`]: [
+  [setterOf(`WKWebView`, `+ setNavigationDelegate:`, `WKNavigationDelegate`)]: [
     '- webView:decidePolicyForNavigationAction:decisionHandler:',
   ],
 
   NSURLSessionDataTask: ['- resume'],
 
   NSURLConnection: [
-    danger('+ sendSynchronousRequest:returningResponse:error:'),
+    '+ sendSynchronousRequest:returningResponse:error:',
     '+ sendAsynchronousRequest:queue:completionHandler:',
   ],
 
-  [protocol`UIApplicationDelegate`]: [
-    '- application:handleOpenURL:',
-    '- application:openURL:sourceApplication:annotation:',
-    '- application:openURL:options:',
-  ],
+  /**
+   * this can-not be done, as the UIApplicationDelegate implementor can not be inferred from code, it's in plist
+   */
+  // [protocol`UIApplicationDelegate`]: [
+  //   '- application:handleOpenURL:',
+  //   '- application:openURL:sourceApplication:annotation:',
+  //   '- application:openURL:options:',
+  // ],
 
   UIApplication: [
     '- canOpenURL:',
