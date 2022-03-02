@@ -27,7 +27,15 @@ $ npm run play
 
 3. hook information are reported by tag `Hook`
 
+4. protocol hooks configuration can be added using helper key generator `setterOf` `argumentOf`
+
+5. some callbacks/classes can not be found as its registered in `info.plist`, thus those should be marked as `unsafe`
+
+6. hooks are categorized as `privacy.ts` and `network.ts`, following the apple app activity privacy report format
+
 ## TODO
 
-1. solve QQMusic call `[NSData dataWithContentsOfURL]` ANR error
-2. tree-shaking for builds
+[DONE] 1. solve QQMusic call `[NSData dataWithContentsOfURL]` ANR error
+[DONE] 2. tree-shaking for builds
+[DONE] 3. trim fat dylib to arm64 only
+[DONE] 4. mrc for frida code
