@@ -1,18 +1,29 @@
 import mapValues from 'lodash/mapValues'
 import pickBy from 'lodash/pickBy'
 import {
+  at,
   Class,
   NormalizedCfgValue,
   RuntimeRecorder,
   Selector,
 } from './foundation'
-import { configuration } from './oc'
+import { Privacies } from './privacy'
+import { Network } from './network'
 
 const Hook = 'Hook'
 const Summary = 'Summary'
 const Oc = ObjC
 const { DispatchedReporter, NSString, NSAutoreleasePool, NSThread } = Oc.classes
 const Debug = true
+const configuration = { ...Privacies, ...Network }
+
+function statistics(tag: string, payload: string) {
+  if (DispatchedReporter) {
+    DispatchedReporter['report:for:'](payload, tag)
+  } else {
+    console.log(`[${tag}]: ${payload}`)
+  }
+}
 
 /**
  * method swizzling for both oc-runtime method and native method
@@ -136,21 +147,7 @@ const trivial = (
   return data
 }
 
-/**
- * like Oc `@` symbol, construct an oc object from js handler
- * @param raw the raw js handler
- * @returns
- */
-const at = (raw: any) => {
-  if (
-    !(raw instanceof NativePointer) &&
-    !(typeof raw === 'object' && raw.hasOwnProperty('handle'))
-  ) {
-    return raw
-  } else {
-    return new Oc.Object(raw)
-  }
-}
+
 
 /**
  * compile configuration to dynamic proxy object
@@ -262,6 +259,7 @@ rpc.exports = {
             return { [key]: [message] }
           }
         } else {
+          // missing classes
           return { [key]: '*' }
         }
       } else {
@@ -276,10 +274,7 @@ rpc.exports = {
               key,
               value.symbol,
               (origin, clazz, method, [self, cmd, ...args]) => {
-                DispatchedReporter['report:for:']('before', method)
                 const returns = origin(self, cmd, ...args)
-                DispatchedReporter['report:for:']('after', method)
-
                 autoreleasepool(() => {
                   const currentThread = NSThread.currentThread()
                   const env = {
@@ -301,9 +296,10 @@ rpc.exports = {
                       ...args.map((it) => it)
                     )
                   )
-                  const hook = NSString['stringWithString:'](Hook)
-                  const data = NSString['stringWithString:'](serialized)
-                  DispatchedReporter['report:for:'](data, hook)
+                  // const hook = NSString['stringWithString:'](Hook)
+                  // const data = NSString['stringWithString:'](serialized)
+                  // DispatchedReporter['report:for:'](data, hook)
+                  statistics(Hook, serialized)
                 })
                 return returns
               }
@@ -318,9 +314,10 @@ rpc.exports = {
     const picked = pickBy(missed, (it) => it.length)
     const serialized = JSON.stringify(picked)
     autoreleasepool(() => {
-      const summary = NSString['stringWithString:'](Summary)
-      const data = NSString['stringWithString:'](serialized)
-      DispatchedReporter['report:for:'](summary, data)
+      // const summary = NSString['stringWithString:'](Summary)
+      // const data = NSString['stringWithString:'](serialized)
+      // DispatchedReporter['report:for:'](summary, data)
+      statistics(Summary, serialized)
     })
   },
   dispose() {},

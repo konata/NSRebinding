@@ -39,3 +39,10 @@ $ npm run play
 [DONE] 2. tree-shaking for builds
 [DONE] 3. trim fat dylib to arm64 only
 [DONE] 4. mrc for frida code
+
+5. multi hook invocation for protocol instance
+6. utilize `NSProxy` to handle native invoke
+7. test protocol callbacks
+8. post payloads to http server
+9. category network hook
+10. c function hook

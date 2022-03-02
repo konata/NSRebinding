@@ -1,4 +1,4 @@
-import { argumentOf, setterOf, RuntimeCfg, $ } from './foundation'
+import { argumentOf, setterOf, RuntimeCfg, inlay } from './foundation'
 
 export const configuration: RuntimeCfg = {
   CNContactStore: ['- requestAccessForEntityType:completionHandler:'],
@@ -12,8 +12,8 @@ export const configuration: RuntimeCfg = {
     '- requestLocation',
   ],
   AVCaptureDevice: [
-    $('+ authorizationStatusForMediaType:')('authorizationStatusForMediaType'),
-    $('+ requestAccessForMediaType:completionHandler:')(
+    inlay('+ authorizationStatusForMediaType:')('authorizationStatusForMediaType'),
+    inlay('+ requestAccessForMediaType:completionHandler:')(
       'requestAccessForMediaType'
     ),
   ],
@@ -25,8 +25,8 @@ export const configuration: RuntimeCfg = {
   EKEventStore: ['- requestAccessToEntityType:completion:'],
   NEHotspotNetwork: ['+ fetchCurrentWithCompletionHandler:'],
   WKWebView: [
-    $('- loadRequest:')('loadRequest'),
-    $('- loadHTMLString:baseURL:')('loadHTMLString', 'baseURL'),
+    inlay('- loadRequest:')('loadRequest'),
+    inlay('- loadHTMLString:baseURL:')('loadHTMLString', 'baseURL'),
     '- evaluateJavaScript:completionHandler:',
   ],
   WKUserContentController: [

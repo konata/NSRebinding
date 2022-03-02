@@ -1,6 +1,6 @@
 import { RuntimeCfg, setterOf, unsafe } from './foundation'
 
-export const privacies: RuntimeCfg = {
+export const Privacies: RuntimeCfg = {
   /**
    * category: [[contacts]]
    * todo: hook callback for Notification `CNContactStoreDidChangeNotification` can be triggered
@@ -27,15 +27,12 @@ export const privacies: RuntimeCfg = {
    * no permission required, we deal the delegates
    * since iOS11 UIImagePickerController runs in a separated process for just read-only access
    */
-  UIImagePickerController: [], //
-  [setterOf(
-    `UIImagePickerController`,
-    '- setDelegate:',
-    `UIImagePickerControllerDelegate`
-  )]: [
-    '- imagePickerController:didFinishPickingMediaWithInfo:', // actually read image or photo
-    '- imagePickerController:didFinishPickingImage:editingInfo:', // actually read image or photo
-  ],
+  UIImagePickerController: [
+    '- takePicture',
+    '- startVideoCapture',
+    '- stopVideoCapture',
+    '- viewWillAppear:',
+  ], //
 
   /**
    * category: [[mediaLibrary]]
@@ -43,12 +40,7 @@ export const privacies: RuntimeCfg = {
    *
    * no permission required, limited collections of albums & photos Since iOS 14, system host it in a separated process
    */
-  PHPickerViewController: [],
-  [setterOf(
-    `PHPickerViewController`,
-    '- setDelegate:',
-    'PHPickerViewControllerDelegate'
-  )]: ['- picker:didFinishPicking:'], // actually read meta data
+  PHPickerViewController: ['- setDelegate:'],
 
   /**
    * category: [[mediaLibrary]]
@@ -58,9 +50,8 @@ export const privacies: RuntimeCfg = {
     '+ authorizationStatus',
     '+ authorizationStatusForAccessLevel:', // get authorize state
     '+ requestAuthorizationForAccessLevel:handler:', // trigger authorization for access level
-    '- presentLimitedLibraryPicker', // show manage dialog
     '- presentLimitedLibraryPickerFromViewController:', // show manage dialog
-    '- presentLimitedLibraryPickerFromViewController:completionHandler:', // show manage dialog
+    '- presentLimitedLibraryPickerFromViewController:completionHandler:', // show manage dialog (iOS 15)
     '- performChanges:completionHandler:', // change album
     '- performChangesAndWait:error:', // change album
   ],
@@ -111,16 +102,13 @@ export const privacies: RuntimeCfg = {
   /**
    * category: [[camera]]
    */
-  AVCaptureDeviceInput: [
-    '+ authorizationStatusForMediaType:',
-    '+ deviceInputWithDevice:error:',
-    '+ requestAccessForMediaType:completionHandler:',
-  ],
-  AVCapturePhotoOutput: ['- capturePhotoWithSettings:delegate:'],
+  AVCaptureDeviceInput: ['+ deviceInputWithDevice:error:'],
   AVCaptureDevice: [
     '+ authorizationStatusForMediaType:',
     '+ requestAccessForMediaType:completionHandler:',
   ],
+
+  AVCapturePhotoOutput: ['- capturePhotoWithSettings:delegate:'],
 
   /**
    * category: [[microphone]]
@@ -146,14 +134,6 @@ export const privacies: RuntimeCfg = {
   ],
 
   /**
-   * TODO
-   * dont known what is the invocation,
-   */
-  [unsafe`RPBroadcastSampleHandler`]: [
-    '- broadcastStartedWithSetupInfo:', // automatically start broadcast notification for #iOS(>10)
-  ],
-
-  /**
    * category: [[location]]
    *
    * ref: [[https://developer.apple.com/documentation/corelocation/getting_the_user_s_location]]
@@ -161,21 +141,9 @@ export const privacies: RuntimeCfg = {
   CLLocationManager: [
     '- requestWhenInUseAuthorization',
     '- requestAlwaysAuthorization',
-  ],
-  [setterOf(
-    'CLLocationManager',
     '- setDelegate:',
-    `CLLocationManagerDelegate`
-  )]: [
-    '- locationManager:didUpdateLocations:',
-    '- locationManager:didUpdateToLocation:fromLocation:',
-    '- locationManager:didEnterRegion:',
-    '- locationManager:didExitRegion:',
-    '- locationManager:didDetermineState:forRegion:',
-    '- locationManager:didStartMonitoringForRegion:',
-    '- locationManager:didRangeBeacons:satisfyingConstraint:',
-    '- locationManager:didFailRangingBeaconsForConstraint:error:',
-    '- locationManager:didVisit:',
+    '- startUpdatingLocationWithPrompt',
+    '- startUpdatingLocation',
   ],
 
   /**
@@ -194,4 +162,51 @@ export const privacies: RuntimeCfg = {
   ],
 }
 
-export const network: RuntimeCfg = {}
+export const PrivacyProtocols: RuntimeCfg = {
+  /**
+   * category: [[mediaLibrary]]
+   */
+  [setterOf(
+    `UIImagePickerController`,
+    '- setDelegate:',
+    `UIImagePickerControllerDelegate`
+  )]: [
+    '- imagePickerController:didFinishPickingMediaWithInfo:', // actually read image or photo
+    '- imagePickerController:didFinishPickingImage:editingInfo:', // actually read image or photo
+  ],
+
+  [setterOf(
+    `PHPickerViewController`,
+    '- setDelegate:',
+    'PHPickerViewControllerDelegate'
+  )]: ['- picker:didFinishPicking:'], // actually read meta data
+
+  /**
+   * category: [[screenRecord]]
+   *
+   * TODO
+   * dont known what is the invocation,
+   */
+  [unsafe`RPBroadcastSampleHandler`]: [
+    '- broadcastStartedWithSetupInfo:', // automatically start broadcast notification for #iOS(>10)
+  ],
+
+  /**
+   * category: [[location]]
+   */
+  [setterOf(
+    'CLLocationManager',
+    '- setDelegate:',
+    `CLLocationManagerDelegate`
+  )]: [
+    '- locationManager:didUpdateLocations:',
+    '- locationManager:didUpdateToLocation:fromLocation:',
+    '- locationManager:didEnterRegion:',
+    '- locationManager:didExitRegion:',
+    '- locationManager:didDetermineState:forRegion:',
+    '- locationManager:didStartMonitoringForRegion:',
+    '- locationManager:didRangeBeacons:satisfyingConstraint:',
+    '- locationManager:didFailRangingBeaconsForConstraint:error:',
+    '- locationManager:didVisit:',
+  ],
+}

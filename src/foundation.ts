@@ -1,3 +1,6 @@
+import take from 'lodash/take'
+import zip from 'lodash/zip'
+
 /**
  * utility type transformer to change a function return type
  */
@@ -119,10 +122,47 @@ type PrivacyRecord =
 
 type PrivacyRecords = Array<PrivacyRecord>
 
+export const ToString = {
+  NSURLRequest(request: any) {
+    const req = at(request)
+    return `method: ${req.HTTPMethod()}, url: ${ToString.NSURL(req.URL())}`
+  },
+  NSURL(url: any) {
+    return `${at(url)}`
+  },
+  NSNetService(service: any) {
+    const $service = at(service)
+    return `name: ${service.name} type:${service.type} domain:${service.domain}`
+  },
+  NSArray(ary: any) {
+    const $ary = at(ary)
+    return `${$ary}`
+  },
+}
+
+/**
+ *
+ * @param message shorthand for positional argument recorder
+ * @returns
+ */
+export function positional(message: Selector) {
+  return (...fn: Array<(args: any) => string>) => ({
+    symbol: message,
+    logger: (...verbose: any[]) => {
+      const [, , , , , , ...rst] = verbose
+      return {
+        args: take(zip(rst, fn), Math.min(rst.length, fn.length)).map(
+          ([rst, fn]) => fn?.(rst) ?? ''
+        ),
+      }
+    },
+  })
+}
+
 /**
  * shorthand to convert a symbol to an object with symbol & logger
  */
-export function $<T extends string>(symbol: T) {
+export function inlay<T extends string>(symbol: T) {
   const callable: {
     (..._: CallableParams<T>): CallableOutputs<T>
   } & {
@@ -166,3 +206,21 @@ export const unsafe = ([f]: TemplateStringsArray) => f
  */
 export const setterOf = (clazz: Class, setter: Selector, protocol: Class) =>
   `${clazz}#${setter.replace(/^[+-]\s+|:$/g, '')}@${setter}#${protocol}`
+
+const Oc = ObjC
+
+/**
+ * like Oc `@` symbol, construct an oc object from js handler
+ * @param raw the raw js handler
+ * @returns
+ */
+export const at = (raw: any) => {
+  if (
+    !(raw instanceof NativePointer) &&
+    !(typeof raw === 'object' && raw.hasOwnProperty('handle'))
+  ) {
+    return raw
+  } else {
+    return new Oc.Object(raw)
+  }
+}
