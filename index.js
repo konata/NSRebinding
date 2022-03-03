@@ -1854,15 +1854,7 @@ Object.defineProperty(exports, "__esModule", {
 var t = require("./foundation");
 
 exports.Network = {
-  NSURLSession: [ t.positional("- dataTaskWithURL:")(t.ToString.NSURL), {
-    symbol: "- dataTaskWithURL:",
-    logger: function(o, e, i, a, s, n, r) {
-      return {
-        args: [ t.ToString.NSURL(r) ],
-        skip: t.at(r).includes(":3456")
-      };
-    }
-  }, t.positional("- dataTaskWithURL:completionHandler:")(t.ToString.NSURL), t.positional("- dataTaskWithRequest:")(t.ToString.NSURLRequest), t.positional("- dataTaskWithRequest:completionHandler:")(t.ToString.NSURLRequest), t.positional("- downloadTaskWithURL:")(t.ToString.NSURL), t.positional("- downloadTaskWithURL:completionHandler:")(t.ToString.NSURL), t.positional("- downloadTaskWithRequest:")(t.ToString.NSURLRequest), t.positional("- downloadTaskWithRequest:completionHandler:")(t.ToString.NSURLRequest), t.positional("- uploadTaskWithRequest:fromData:")(t.ToString.NSURLRequest), t.positional("- uploadTaskWithRequest:fromData:completionHandler:")(t.ToString.NSURLRequest), t.positional("- uploadTaskWithRequest:fromFile:")(t.ToString.NSURLRequest), t.positional("- uploadTaskWithRequest:fromFile:completionHandler:")(t.ToString.NSURLRequest), t.positional("- uploadTaskWithStreamedRequest:")(t.ToString.NSURLRequest), t.inlay("- streamTaskWithHostName:port:")("streamTaskWithHostName", "port"), t.positional("- streamTaskWithNetService:")(t.ToString.NSNetService), t.positional("- webSocketTaskWithURL:")(t.ToString.NSURL), t.positional("- webSocketTaskWithRequest:")(t.ToString.NSURLRequest), t.positional("- webSocketTaskWithURL:protocols:")(t.ToString.NSURLRequest, t.ToString.NSArray) ]
+  NSURLSession: [ t.positional("- dataTaskWithURL:")(t.ToString.NSURL), t.positional("- dataTaskWithURL:completionHandler:")(t.ToString.NSURL), t.positional("- dataTaskWithRequest:")(t.ToString.NSURLRequest), t.positional("- dataTaskWithRequest:completionHandler:")(t.ToString.NSURLRequest), t.positional("- downloadTaskWithURL:")(t.ToString.NSURL), t.positional("- downloadTaskWithURL:completionHandler:")(t.ToString.NSURL), t.positional("- downloadTaskWithRequest:")(t.ToString.NSURLRequest), t.positional("- downloadTaskWithRequest:completionHandler:")(t.ToString.NSURLRequest), t.positional("- uploadTaskWithRequest:fromData:")(t.ToString.NSURLRequest), t.positional("- uploadTaskWithRequest:fromData:completionHandler:")(t.ToString.NSURLRequest), t.positional("- uploadTaskWithRequest:fromFile:")(t.ToString.NSURLRequest), t.positional("- uploadTaskWithRequest:fromFile:completionHandler:")(t.ToString.NSURLRequest), t.positional("- uploadTaskWithStreamedRequest:")(t.ToString.NSURLRequest), t.inlay("- streamTaskWithHostName:port:")("streamTaskWithHostName", "port"), t.positional("- streamTaskWithNetService:")(t.ToString.NSNetService), t.positional("- webSocketTaskWithURL:")(t.ToString.NSURL), t.positional("- webSocketTaskWithRequest:")(t.ToString.NSURLRequest), t.positional("- webSocketTaskWithURL:protocols:")(t.ToString.NSURLRequest, t.ToString.NSArray) ]
 };
 
 },{"./foundation":148}],151:[function(require,module,exports){

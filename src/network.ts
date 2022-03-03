@@ -11,24 +11,6 @@ import {
 export const Network: RuntimeCfg = {
   NSURLSession: [
     positional('- dataTaskWithURL:')(ToString.NSURL),
-    {
-      symbol: '- dataTaskWithURL:',
-      logger(
-        env: Record<string, string>,
-        clazz: string,
-        method: string,
-        returns: any,
-        receiver: any,
-        cmd: string,
-        url: any
-      ) {
-        return {
-          args: [ToString.NSURL(url)],
-          skip: at(url).includes(':3456'),
-        }
-      },
-    },
-
     positional('- dataTaskWithURL:completionHandler:')(ToString.NSURL),
     positional('- dataTaskWithRequest:')(ToString.NSURLRequest),
     positional('- dataTaskWithRequest:completionHandler:')(
