@@ -49,6 +49,7 @@ export type RuntimeSnapshot = {
   args: Array<string> // args
   returns: string
   description?: string
+  skip?: boolean
 }
 
 /**

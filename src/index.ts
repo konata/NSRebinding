@@ -5,6 +5,7 @@ import {
   Class,
   NormalizedCfgValue,
   RuntimeRecorder,
+  RuntimeSnapshot,
   Selector,
 } from './foundation'
 import { Privacies } from './privacy'
@@ -85,7 +86,7 @@ const designated = (
   receiver: any,
   _selector: string,
   ...args: any[]
-): Partial<RuntimeRecorder> => {
+): Partial<RuntimeSnapshot> => {
   const uniques = new Set(...labels)
   if (uniques.delete('*')) {
     return {
@@ -137,7 +138,7 @@ const trivial = (
   _receiver: any,
   selector: string,
   ..._args: any[]
-): Partial<RuntimeRecorder> => {
+): Partial<RuntimeSnapshot> => {
   const signature = `[${clazz} ${method}]`
   const data = {
     env,
@@ -146,8 +147,6 @@ const trivial = (
   }
   return data
 }
-
-
 
 /**
  * compile configuration to dynamic proxy object
@@ -284,22 +283,20 @@ rpc.exports = {
                     tid: Process.getCurrentThreadId().toString(),
                   }
 
-                  const serialized = JSON.stringify(
-                    value.logger(
-                      env,
-                      clazz,
-                      method,
-                      returns,
-                      self,
-                      Oc.selectorAsString(cmd),
-                      // args maybe BOOL, which can not wrapped into Oc instance
-                      ...args.map((it) => it)
-                    )
+                  const output = value.logger(
+                    env,
+                    clazz,
+                    method,
+                    returns,
+                    self,
+                    Oc.selectorAsString(cmd),
+                    // args maybe BOOL, which can not wrapped into Oc instance
+                    ...args.map((it) => it)
                   )
-                  // const hook = NSString['stringWithString:'](Hook)
-                  // const data = NSString['stringWithString:'](serialized)
-                  // DispatchedReporter['report:for:'](data, hook)
-                  statistics(Hook, serialized)
+                  const serialized = JSON.stringify(output)
+                  if (!output.skip) {
+                    statistics(Hook, serialized)
+                  }
                 })
                 return returns
               }
