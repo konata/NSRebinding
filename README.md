@@ -46,3 +46,19 @@ $ npm run play
 8. post payloads to http server
 9. category network hook
 10. c function hook
+
+
+## ISSUE
+1. 
+   `/System/Library/Frameworks/WebKit.framework/XPCServices/com.apple.WebKit.Networking.xpc/com.apple.WebKit.Networking` 
+   `/System/Library/Frameworks/WebKit.framework/XPCServices/com.apple.WebKit.WebContent.xpc/com.apple.WebKit.WebContent`
+   `/Applications/MobileSlideShow.app/PlugIns/PhotoPicker.appex/PhotoPicker`
+   `/System/Library/Frameworks/ImageCaptureCore.framework/XPCServices/icprefd-xpc.xpc/icprefd-xpc`
+   `/System/Library/Frameworks/ImageCaptureCore.framework/XPCServices/mscamerad-xpc.xpc/mscamerad-xpc`
+
+
+     
+   
+
+
+
