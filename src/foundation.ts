@@ -48,6 +48,7 @@ export type RuntimeSnapshot = {
   selector: string // + new
   args: Array<string> // args
   returns: string
+  stack?: Array<string>
   description?: string
   skip?: boolean
 }
@@ -158,6 +159,16 @@ export function positional(message: Selector) {
       }
     },
   })
+}
+
+/**
+ *
+ * @param context generate backtrace for current call
+ */
+export function backtrace(context: any) {
+  return Thread.backtrace(context, Backtracer.ACCURATE).map(
+    (it) => DebugSymbol.fromAddress(it).name
+  )
 }
 
 /**

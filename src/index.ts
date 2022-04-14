@@ -17,6 +17,7 @@ const Oc = ObjC
 const { DispatchedReporter, NSString, NSAutoreleasePool, NSThread } = Oc.classes
 const Debug = true
 const configuration = { ...Privacies, ...Network }
+const nil = ''
 
 function statistics(tag: string, payload: string) {
   if (DispatchedReporter) {
@@ -48,6 +49,28 @@ function swizzle(
     return impl(original, clazz, method, args)
   })
   return fn.implementation
+}
+
+/**
+ * rebinding implementations,
+ * you can employ this function for cases
+ * do not need return value but backtrace
+ *
+ *
+ *
+ */
+function rebinding(
+  clazz: string,
+  method: string,
+  impl: (args: [any, any, ...Array<any>], context: any) => any
+) {
+  if (Oc.classes[clazz]?.[method]?.implementation) {
+    Interceptor.attach(Oc.classes[clazz][method].implementation, {
+      onEnter(args) {
+        impl(args as [any, any, ...Array<any>], this.context)
+      },
+    })
+  }
 }
 
 /**
@@ -268,6 +291,23 @@ rpc.exports = {
             console.error(`missing ${key}:${JSON.stringify(value)}`)
             return value.symbol
           } else {
+            /*
+            rebinding(key, value.symbol, ([self, cmd, ...args], context) => {
+              autoreleasepool(() => {
+                const output = value.logger(
+                  {}, // env,
+                  key,
+                  value.symbol,
+                  context,
+                  self,
+                  Oc.selectorAsString(cmd),
+                  ...args.map((it) => it)
+                )
+                const serialized = JSON.stringify(output)
+                statistics(Hook, serialized)
+              })
+            })
+            */
             const fun = Oc.classes[key][value.symbol]
             swizzle(
               key,
