@@ -2,6 +2,14 @@ import { RuntimeCfg, setterOf, unsafe } from './foundation'
 
 export const Privacies: RuntimeCfg = {
   /**
+   * category: [[ads]]
+   */
+  ATTrackingManager: [
+    '+ requestTrackingAuthorizationWithCompletionHandler:',
+    '- trackingAuthorizationStatus',
+  ],
+
+  /**
    * category: [[contacts]]
    * todo: hook callback for Notification `CNContactStoreDidChangeNotification` can be triggered
    */
