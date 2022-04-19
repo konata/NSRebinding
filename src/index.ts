@@ -1,5 +1,3 @@
-import mapValues from 'lodash/mapValues'
-import pickBy from 'lodash/pickBy'
 import {
   at,
   Class,
@@ -10,6 +8,7 @@ import {
 } from './foundation'
 import { Privacies } from './privacy'
 import { Network } from './network'
+import { mapValues, pickBy } from './underscore'
 
 const Hook = 'Hook'
 const Summary = 'Summary'
@@ -162,7 +161,8 @@ const trivial = (
   selector: string,
   ..._args: any[]
 ): Partial<RuntimeSnapshot> => {
-  const signature = `[${clazz} ${method}]`
+  const [sign, name] = method.split(/(?<=^[+-])\s*/)
+  const signature = `${sign}[${clazz} ${name}]`
   const data = {
     env,
     signature,
@@ -289,25 +289,8 @@ rpc.exports = {
           // filter out all non-own methods, coz it may hook other sub classes
           if (!clazz.$ownMethods.includes(value.symbol)) {
             console.error(`missing ${key}:${JSON.stringify(value)}`)
-            return value.symbol
+            return value.symbol as string
           } else {
-            /*
-            rebinding(key, value.symbol, ([self, cmd, ...args], context) => {
-              autoreleasepool(() => {
-                const output = value.logger(
-                  {}, // env,
-                  key,
-                  value.symbol,
-                  context,
-                  self,
-                  Oc.selectorAsString(cmd),
-                  ...args.map((it) => it)
-                )
-                const serialized = JSON.stringify(output)
-                statistics(Hook, serialized)
-              })
-            })
-            */
             const fun = Oc.classes[key][value.symbol]
             swizzle(
               key,
@@ -315,14 +298,7 @@ rpc.exports = {
               (origin, clazz, method, [self, cmd, ...args]) => {
                 const returns = origin(self, cmd, ...args)
                 autoreleasepool(() => {
-                  const currentThread = NSThread.currentThread()
-                  const env = {
-                    main: currentThread.isMainThread(),
-                    threadName: currentThread.name().toString(),
-                    pid: Process.id.toString(),
-                    tid: Process.getCurrentThreadId().toString(),
-                  }
-
+                  const env = {}
                   const output = value.logger(
                     env,
                     clazz,
@@ -341,19 +317,22 @@ rpc.exports = {
                 return returns
               }
             )
-            return ''
+            return '' as string
           }
         })
+
         return { [key]: missed.filter((it) => !it) }
       }
     })
 
-    const picked = pickBy(missed, (it) => it.length)
+    const combination = missed.reduce(
+      (acc, ele) => ({ ...acc, ...ele }),
+      {} as Record<string, string | string[]>
+    )
+
+    const picked = pickBy(combination, (it) => it.length)
     const serialized = JSON.stringify(picked)
     autoreleasepool(() => {
-      // const summary = NSString['stringWithString:'](Summary)
-      // const data = NSString['stringWithString:'](serialized)
-      // DispatchedReporter['report:for:'](summary, data)
       statistics(Summary, serialized)
     })
   },

@@ -1,5 +1,4 @@
-import take from 'lodash/take'
-import zip from 'lodash/zip'
+import { zip } from "./underscore"
 
 /**
  * utility type transformer to change a function return type
@@ -153,9 +152,7 @@ export function positional(message: Selector) {
     logger: (...verbose: any[]) => {
       const [, , , , , , ...rst] = verbose
       return {
-        args: take(zip(rst, fn), Math.min(rst.length, fn.length)).map(
-          ([rst, fn]) => fn?.(rst) ?? ''
-        ),
+        args: zip(rst, fn).map(([rst, fn]) => fn?.(rst) ?? ''),
       }
     },
   })
