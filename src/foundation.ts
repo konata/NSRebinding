@@ -1,4 +1,4 @@
-import { zip } from "./underscore"
+import { zip } from './underscore'
 
 /**
  * utility type transformer to change a function return type

@@ -15,5 +15,7 @@
     "@types/node": "^16.4.8",
     "frida-compile": "^10.0.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "typescript": "^4.6.4"
+  }
 }
