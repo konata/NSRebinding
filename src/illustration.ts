@@ -1,6 +1,8 @@
 import { Class } from './foundation'
 
 type Documentation = string
+type Sel = string
+type Selector = `${'+' | '-'} ${Sel}`
 
 const Illustration: Record<Class, Record<Selector, Documentation>> = {
   NSURLSession: {
@@ -153,3 +155,20 @@ const Illustration: Record<Class, Record<Selector, Documentation>> = {
     '- removeAllDeliveredNotifications': '删除所有通知',
   },
 }
+
+// to generate `illustration.json`
+
+// console.log(
+//   JSON.stringify(
+//     Object.fromEntries(
+//       Object.entries(Illustration).flatMap(([clazz, value]) =>
+//         Object.entries(value).map(([selector, illustration]) => {
+//           const [sign, name] = selector.split(/\s+/g)
+//           return [`${sign} [${clazz} ${name}]`, illustration]
+//         })
+//       )
+//     ),
+//     null,
+//     2
+//   )
+// )
