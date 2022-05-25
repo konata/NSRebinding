@@ -156,7 +156,7 @@ const Illustration: Record<Class, Record<Selector, Documentation>> = {
   },
 }
 
-// to generate `illustration.json`
+// run below script to generate `illustration.json`
 
 // console.log(
 //   JSON.stringify(
